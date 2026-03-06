@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HOPE_IRL - Career Support Partner Ireland & EU</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-50">
+    <!-- Main Container -->
+    <div id="app">
+        <!-- Landing Page -->
+        <div id="landingPage" class="page">
+            <!-- Navigation -->
+            <nav class="bg-white shadow-sm sticky top-0 z-50">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex justify-between items-center h-16">
+                        <div class="flex items-center">
+                            <i class="fas fa-briefcase text-2xl md:text-3xl gradient-text mr-2 md:mr-3"></i>
+                            <span class="text-xl md:text-2xl font-bold gradient-text">HOPE_IRL</span>
+                        </div>
+                        <div class="hidden md:flex space-x-8">
+                            <a href="#features" class="text-gray-700 hover:text-purple-600 font-medium">Features</a>
+                            <a href="#services" class="text-gray-700 hover:text-purple-600 font-medium">Services</a>
+                            <a href="#pricing" class="text-gray-700 hover:text-purple-600 font-medium">Pricing</a>
+                        </div>
+                        <div class="hidden md:flex space-x-4">
+                            <button onclick="showLogin()" class="text-purple-600 hover:text-purple-700 font-semibold px-4 py-2">Login</button>
+                            <button onclick="showRegister()" class="gradient-bg text-white px-6 py-2 rounded-lg hover:opacity-90 font-semibold">Get Started</button>
+                        </div>
+                        <button onclick="toggleMobileMenu()" class="md:hidden text-gray-700">
+                            <i class="fas fa-bars text-2xl"></i>
+                        </button>
+                    </div>
+                    <!-- Mobile Menu -->
+                    <div id="mobileMenu" class="hidden md:hidden pb-4">
+                        <div class="flex flex-col space-y-3">
+                            <a href="#features" class="text-gray-700 hover:text-purple-600 font-medium py-2">Features</a>
+                            <a href="#services" class="text-gray-700 hover:text-purple-600 font-medium py-2">Services</a>
+                            <a href="#pricing" class="text-gray-700 hover:text-purple-600 font-medium py-2">Pricing</a>
+                            <button onclick="showLogin()" class="text-purple-600 hover:text-purple-700 font-semibold px-4 py-2 text-left">Login</button>
+                            <button onclick="showRegister()" class="gradient-bg text-white px-6 py-2 rounded-lg hover:opacity-90 font-semibold">Get Started</button>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Hero Section -->
+            <section class="gradient-bg text-white py-12 md:py-20">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                    <h1 class="text-3xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6">Your Trusted Career Support Partner in Ireland & the EU</h1>
+                    <p class="text-lg md:text-xl lg:text-2xl mb-6 md:mb-8 text-purple-100">Professional support. Targeted applications. Real results.</p>
+                    <div class="flex flex-col sm:flex-row justify-center gap-3 md:gap-4">
+                        <button onclick="showRegister()" class="bg-white text-purple-600 px-6 md:px-8 py-3 md:py-4 rounded-lg font-bold text-base md:text-lg hover:bg-gray-100 transition">
+                            Start Your Job Search
+                        </button>
+                        <button class="border-2 border-white text-white px-6 md:px-8 py-3 md:py-4 rounded-lg font-bold text-base md:text-lg hover:bg-white hover:text-purple-600 transition">
+                            View Services
+                        </button>
+                    </div>
+                    <div class="mt-10 md:mt-16 grid grid-cols-3 gap-4 md:gap-8 max-w-3xl mx-auto">
+                        <div>
+                            <div class="text-2xl md:text-4xl font-bold">10-15</div>
+                            <div class="text-xs md:text-base text-purple-200">Daily Applications</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl md:text-4xl font-bold">24/7</div>
+                            <div class="text-xs md:text-base text-purple-200">Real-time Support</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl md:text-4xl font-bold">EU</div>
+                            <div class="text-xs md:text-base text-purple-200">Standards</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Features Section -->
+            <section id="features" class="py-12 md:py-20 bg-white">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <h2 class="text-3xl md:text-4xl font-bold text-center mb-3 md:mb-4">Why Choose Us?</h2>
+                    <p class="text-gray-600 text-center mb-8 md:mb-12 text-base md:text-lg">Professional services to accelerate your job search</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+                        <div class="card-hover bg-white p-6 md:p-8 rounded-xl border border-gray-200">
+                            <div class="w-12 h-12 md:w-16 md:h-16 gradient-bg rounded-full flex items-center justify-center mb-4">
+                                <i class="fas fa-rocket text-white text-xl md:text-2xl"></i>
+                            </div>
+                            <h3 class="text-lg md:text-xl font-bold mb-2 md:mb-3">Fast Applications</h3>
+                            <p class="text-gray-600 text-sm md:text-base">We apply to multiple jobs daily on your behalf, increasing your chances exponentially.</p>
+                        </div>
+                        <div class="card-hover bg-white p-6 md:p-8 rounded-xl border border-gray-200">
+                            <div class="w-12 h-12 md:w-16 md:h-16 gradient-bg rounded-full flex items-center justify-center mb-4">
+                                <i class="fas fa-chart-line text-white text-xl md:text-2xl"></i>
+                            </div>
+                            <h3 class="text-lg md:text-xl font-bold mb-2 md:mb-3">Real-time Tracking</h3>
+                            <p class="text-gray-600 text-sm md:text-base">Monitor every application status with detailed reports and daily updates.</p>
+                        </div>
+                        <div class="card-hover bg-white p-6 md:p-8 rounded-xl border border-gray-200">
+                            <div class="w-12 h-12 md:w-16 md:h-16 gradient-bg rounded-full flex items-center justify-center mb-4">
+                                <i class="fas fa-headset text-white text-xl md:text-2xl"></i>
+                            </div>
+                            <h3 class="text-lg md:text-xl font-bold mb-2 md:mb-3">Expert Support</h3>
+                            <p class="text-gray-600 text-sm md:text-base">Dedicated support team available via chat and WhatsApp throughout your journey.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Services Section -->
+            <section id="services" class="py-12 md:py-20 bg-gray-50">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <h2 class="text-3xl md:text-4xl font-bold text-center mb-8 md:mb-12">Our Services</h2>
+                    <div id="landingServicesGrid" class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8"></div>
+                    <!-- Bonus Support Section -->
+                    <div class="mt-8 bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-400 rounded-xl p-6 md:p-8">
+                        <div class="flex items-center justify-center mb-4">
+                            <i class="fas fa-gift text-yellow-600 text-3xl mr-3"></i>
+                            <h3 class="text-2xl md:text-3xl font-bold text-gray-800">BONUS SUPPORT</h3>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-lg md:text-xl font-semibold text-gray-700 mb-2">Exclusive LinkedIn Premium Access</p>
+                            <p class="text-gray-600">Available at a reduced cost for our clients</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="bg-gray-900 text-white py-12">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                        <div>
+                            <div class="flex items-center mb-4">
+                                <i class="fas fa-briefcase text-3xl text-purple-400 mr-3"></i>
+                                <span class="text-2xl font-bold">HOPE_IRL</span>
+                            </div>
+                            <p class="text-gray-400">Your trusted career support partner in Ireland & the EU.</p>
+                        </div>
+                        <div>
+                            <h4 class="font-bold mb-4">Quick Links</h4>
+                            <ul class="space-y-2 text-gray-400">
+                                <li><a href="#features" class="hover:text-white">About Us</a></li>
+                                <li><a href="#services" class="hover:text-white">Services</a></li>
+                                <li><a href="#pricing" class="hover:text-white">Pricing</a></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-bold mb-4">Contact Us</h4>
+                            <ul class="space-y-3 text-gray-400">
+                                <li class="flex items-center">
+                                    <i class="fab fa-whatsapp text-green-400 text-xl mr-3"></i>
+                                    <a href="https://wa.me/353874786869" class="hover:text-white">+353 874 786 869</a>
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-phone text-blue-400 text-xl mr-3"></i>
+                                    <a href="tel:+353831683090" class="hover:text-white">+353 83 168 3090</a>
+                                </li>
+                                <li class="text-sm">
+                                    <span class="text-green-400 font-semibold">WhatsApp & Call Support Available</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-bold mb-4">Connect</h4>
+                            <div class="flex space-x-4 mb-4">
+                                <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-linkedin text-2xl"></i></a>
+                                <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook text-2xl"></i></a>
+                                <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter text-2xl"></i></a>
+                            </div>
+                            <p class="text-gray-400 text-sm">Operating across Ireland and the EU</p>
+                        </div>
+                    </div>
+                    <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+                        <p>&copy; 2026 HOPE_IRL. All rights reserved.</p>
+                    </div>
+                </div>
+            </footer>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="adminDashboard" class="page hidden">
+            <div class="flex min-h-screen bg-gray-100">
+                <!-- Sidebar -->
+                <div id="adminSidebar" class="fixed md:relative w-64 bg-white shadow-lg h-full overflow-y-auto z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
+                    <div class="p-4 md:p-6 border-b flex justify-between items-center">
+                        <div class="flex items-center">
+                            <i class="fas fa-briefcase text-xl md:text-2xl gradient-text mr-2 md:mr-3"></i>
+                            <span class="text-lg md:text-xl font-bold">Admin Panel</span>
+                        </div>
+                        <button onclick="toggleSidebar('admin')" class="md:hidden text-gray-600">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    <nav class="p-4">
+                        <a onclick="showAdminSection('dashboard', event)" class="sidebar-item active flex items-center p-3 rounded-lg mb-2 cursor-pointer">
+                            <i class="fas fa-chart-line mr-3"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a onclick="showAdminSection('clients', event)" class="sidebar-item flex items-center p-3 rounded-lg mb-2 cursor-pointer">
+                            <i class="fas fa-users mr-3"></i>
+                            <span>Clients</span>
+                        </a>
+                        <a onclick="showAdminSection('employees', event)" class="sidebar-item flex items-center p-3 rounded-lg mb-2 cursor-pointer">
+                            <i class="fas fa-user-tie mr-3"></i>
+                            <span>Employees</span>
+                        </a>
+                        <a onclick="showAdminSection('payments', event)" class="sidebar-item flex items-center p-3 rounded-lg mb-2 cursor-pointer">
+                            <i class="fas fa-credit-card mr-3"></i>
+                            <span class="flex-1">Payments</span>
+                            <span id="pendingPaymentsBadge" style="display:none;" class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full ml-2">!</span>
+                        </a>
+                        <a onclick="showAdminSection('services', event)" class="sidebar-item flex items-center p-3 rounded-lg mb-2 cursor-pointer">
+                            <i class="fas fa-cog mr-3"></i>
+                            <span>Services</span>
+                        </a>
+                        <a onclick="showClientSection('plans', event)" class="sidebar-item flex items-center p-3 rounded-lg mb-2 cursor-pointer">
+                            <i class="fas fa-box-open mr-3"></i>
+                            <span>Our Plans</span>
+                        </a>
+                        <a onclick="logout()" class="sidebar-item flex items-center p-3 rounded-lg mb-2 cursor-pointer text-red-600">
+                            <i class="fas fa-sign-out-alt mr-3"></i>
+                            <span>Logout</span>
+                        </a>
+                    </nav>
+                </div>
+
+                <!-- Main Content -->
+                <div class="flex-1 overflow-auto">
+                    <!-- Header -->
+                    <div class="bg-white shadow-sm p-4 md:p-6 border-b">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center">
+                                <button onclick="toggleSidebar('admin')" class="md:hidden mr-3 text-gray-600">
+                                    <i class="fas fa-bars text-xl"></i>
+                                </button>
+                                <h1 class="text-xl md:text-2xl font-bold">Admin Dashboard</h1>
+                            </div>
+                            <div class="flex items-center space-x-2 md:space-x-4">
+                                <div class="text-right hidden md:block">
+                                    <div class="font-semibold text-sm md:text-base user-name-display">Admin</div>
+                                    <div class="text-xs md:text-sm text-gray-600 user-email-display"></div>
+                                </div>
+                                <div class="relative w-8 h-8 md:w-10 md:h-10 cursor-pointer" onclick="showAvatarUploadModal()" title="Change profile picture">
+                                    <img class="user-avatar-img hidden w-full h-full rounded-full object-cover" src="" alt="Avatar">
+                                    <div class="user-initials-avatar w-full h-full bg-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm md:text-base user-initials">A</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Section -->
+                    <div id="adminDashboardSection" class="admin-section p-4 md:p-6">
+                        <!-- Expiry Alert -->
+                        <div id="adminExpiryAlert" class="hidden"></div>
+                        <!-- Analytics Row -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+                            <div class="bg-white rounded-xl shadow-sm p-5">
+                                <h3 class="font-bold text-gray-700 mb-4 flex items-center gap-2"><i class="fas fa-chart-bar text-purple-500"></i> Monthly Revenue</h3>
+                                <div id="adminRevenueChart"><div class="text-center text-gray-400 py-8"><i class="fas fa-spinner fa-spin"></i></div></div>
+                            </div>
+                            <div class="bg-white rounded-xl shadow-sm p-5 flex flex-col justify-center">
+                                <h3 class="font-bold text-gray-700 mb-4 flex items-center gap-2"><i class="fas fa-funnel-dollar text-purple-500"></i> Conversion</h3>
+                                <div id="adminConversionRate" class="text-center"><div class="text-gray-400"><i class="fas fa-spinner fa-spin"></i></div></div>
+                            </div>
+                        </div>
+                        <!-- Stats -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-6">
+                            <div class="stat-card rounded-xl p-4 md:p-6">
+                                <div class="flex justify-between items-start mb-2 md:mb-4">
+                                    <div>
+                                        <div class="text-gray-600 text-xs md:text-sm">Total Clients</div>
+                                        <div id="adminTotalClients" class="text-2xl md:text-3xl font-bold mt-1 md:mt-2">...</div>
+                                    </div>
+                                    <div class="w-10 h-10 md:w-12 md:h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-users text-blue-600 text-base md:text-xl"></i>
+                                    </div>
+                                </div>
+                                <div class="text-green-600 text-xs md:text-sm">Live from database</div>
+                            </div>
+                            <div class="stat-card rounded-xl p-4 md:p-6">
+                                <div class="flex justify-between items-start mb-2 md:mb-4">
+                                    <div>
+                                        <div class="text-gray-600 text-xs md:text-sm">Applications Sent</div>
+                                        <div id="adminTotalApps" class="text-2xl md:text-3xl font-bold mt-1 md:mt-2">...</div>
+                                    </div>
+                                    <div class="w-10 h-10 md:w-12 md:h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-paper-plane text-purple-600 text-base md:text-xl"></i>
+                                    </div>
+                                </div>
+                                <div class="text-green-600 text-xs md:text-sm">Live from database</div>
+                            </div>
+                            <div class="stat-card rounded-xl p-4 md:p-6">
+                                <div class="flex justify-between items-start mb-2 md:mb-4">
+                                    <div>
+                                        <div class="text-gray-600 text-xs md:text-sm">Total Employees</div>
+                                        <div id="adminTotalEmployees" class="text-2xl md:text-3xl font-bold mt-1 md:mt-2">...</div>
+                                    </div>
+                                    <div class="w-10 h-10 md:w-12 md:h-12 bg-green-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-user-tie text-green-600 text-base md:text-xl"></i>
+                                    </div>
+                                </div>
+                                <div class="text-green-600 text-xs md:text-sm">Live from database</div>
+                            </div>
+                            <div class="stat-card rounded-xl p-4 md:p-6">
+                                <div class="flex justify-between items-start mb-2 md:mb-4">
+                                    <div>
+                                        <div class="text-gray-600 text-xs md:text-sm">Total Revenue</div>
+                                        <div id="adminTotalRevenue" class="text-2xl md:text-3xl font-bold mt-1 md:mt-2">...</div>
+                                    </div>
+                                    <div class="w-10 h-10 md:w-12 md:h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-euro-sign text-yellow-600 text-base md:text-xl"></i>
+                                    </div>
+                                </div>
+                                <div class="text-green-600 text-xs md:text-sm">Live from database</div>
+                            </div>
+                        </div>
+
+                        <!-- Analytics Chart -->
+                        <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                            <h3 class="text-lg font-bold mb-4">Application Analytics</h3>
+                            <div class="flex items-end space-x-4 h-64">
+                                <div class="flex-1 flex flex-col items-center">
+                                    <div class="w-full bg-purple-200 rounded-t chart-bar" style="height: 60%"></div>
+                                    <div class="text-sm mt-2 text-gray-600">Jan</div>
+                                </div>
+                                <div class="flex-1 flex flex-col items-center">
+                                    <div class="w-full bg-purple-300 rounded-t chart-bar" style="height: 75%"></div>
+                                    <div class="text-sm mt-2 text-gray-600">Feb</div>
+                                </div>
+                                <div class="flex-1 flex flex-col items-center">
+                                    <div class="w-full bg-purple-400 rounded-t chart-bar" style="height: 85%"></div>
+                                    <div class="text-sm mt-2 text-gray-600">Mar</div>
+                                </div>
+                                <div class="flex-1 flex flex-col items-center">
+                                    <div class="w-full bg-purple-500 rounded-t chart-bar" style="height: 70%"></div>
+                                    <div class="text-sm mt-2 text-gray-600">Apr</div>
+                                </div>
+                                <div class="flex-1 flex flex-col items-center">
+                                    <div class="w-full bg-purple-600 rounded-t chart-bar" style="height: 90%"></div>
+                                    <div class="text-sm mt-2 text-gray-600">May</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Activity - Real Data -->
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <h3 class="text-lg font-bold mb-4">Recent Applications</h3>
+                            <div id="adminRecentActivity" class="space-y-3">
+                                <div class="text-center text-gray-400 py-6"><i class="fas fa-spinner fa-spin mr-2"></i>Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Clients Section -->
+                    <div id="adminClientsSection" class="admin-section hidden p-6">
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <div class="flex justify-between items-center mb-6">
+                                <h2 class="text-2xl font-bold">All Clients</h2>
+                                <button onclick="showAssignJobModal()" class="gradient-bg text-white px-4 py-2 rounded-lg font-semibold">
+                                    <i class="fas fa-user-plus mr-2"></i>Assign to Employee
+                                </button>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead>
+                                        <tr class="border-b bg-gray-50">
+                                            <th class="text-left p-4">Client</th>
+                                            <th class="text-left p-4">Email</th>
+                                            <th class="text-left p-4">Plan</th>
+                                            <th class="text-left p-4">Status</th>
+                                            <th class="text-left p-4">Assigned To</th>
+                                            <th class="text-left p-4">Apps</th>
+                                            <th class="text-left p-4">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="clientsTableBody">
+                                        <tr><td colspan="7" class="p-6 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>Loading...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Employees Section -->
+                    <div id="adminEmployeesSection" class="admin-section hidden p-6">
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <div class="flex justify-between items-center mb-6">
+                                <h2 class="text-2xl font-bold">Employees</h2>
+                                <button onclick="showAddEmployeeModal()" class="gradient-bg text-white px-4 py-2 rounded-lg font-semibold">
+                                    <i class="fas fa-plus mr-2"></i>Add Employee
+                                </button>
+                            </div>
+                            <div id="adminEmployeesGrid" class="grid md:grid-cols-3 gap-6">
+                                <div class="col-span-3 text-center text-gray-400 py-8">
+                                    <i class="fas fa-spinner fa-spin text-2xl mb-2"></i><p>Loading...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payments Section -->
+                    <div id="adminPaymentsSection" class="admin-section hidden p-6">
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <h2 class="text-2xl font-bold mb-6">Payment Management</h2>
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead>
+                                        <tr class="border-b">
+                                            <th class="text-left p-4">Client</th>
+                                            <th class="text-left p-4">Amount</th>
+                                            <th class="text-left p-4">Service</th>
+                                            <th class="text-left p-4">Method</th>
+                                            <th class="text-left p-4">Date</th>
+                                            <th class="text-left p-4">Status</th>
+                                            <th class="text-left p-4">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="paymentsTableBody">
+                                        <tr><td colspan="6" class="p-6 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>Loading...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Services Section -->
+                    <div id="adminServicesSection" class="admin-section hidden p-6">
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <div class="flex justify-between items-center mb-6">
+                                <h2 class="text-2xl font-bold">Manage Services</h2>
+                                <button onclick="showAddServiceModal()" class="gradient-bg text-white px-4 py-2 rounded-lg font-semibold">
+                                    <i class="fas fa-plus mr-2"></i>Add Service
+                                </button>
+                            </div>
+                            <div id="servicesGrid" class="grid md:grid-cols-3 gap-6">
+                                <div class="col-span-3 p-6 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Employee Dashboard -->
+        <div id="employeeDashboard" class="page hidden">
+            <div class="flex min-h-screen bg-gray-100">
+                <!-- Sidebar -->
+                <div id="employeeSidebar" class="fixed md:relative w-64 bg-white shadow-lg h-full overflow-y-auto z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
+                    <div class="p-4 md:p-6 border-b flex justify-between items-center">
+                        <div class="flex items-center">
+                            <i class="fas fa-briefcase text-xl md:text-2xl gradient-text mr-2 md:mr-3"></i>
+                            <span class="text-lg md:text-xl font-bold">Employee Portal</span>
+                        </div>
+                        <button onclick="toggleSidebar('employee')" class="md:hidden text-gray-600">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    <nav class="p-4">
+                        <a onclick="showEmployeeSection('dashboard', event)" class="sidebar-item active flex items-center p-3 rounded-lg mb-2 cursor-pointer">
+                            <i class="fas fa-chart-line mr-3"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a onclick="showEmployeeSection('clients', event)" class="sidebar-item flex items-center p-3 rounded-lg mb-2 cursor-pointer">
+                            <i class="fas fa-users mr-3"></i>
+                            <span>My Clients</span>
+                        </a>
+                        <a onclick="showEmployeeSection('applications', event)" class="sidebar-item flex items-center p-3 rounded-lg mb-2 cursor-pointer">
+                            <i class="fas fa-paper-plane mr-3"></i>
+                            <span>Applications</span>
+                        </a>
+                        <a onclick="logout()" class="sidebar-item flex items-center p-3 rounded-lg mb-2 cursor-pointer text-red-600">
+                            <i class="fas fa-sign-out-alt mr-3"></i>
+                            <span>Logout</span>
+                        </a>
+                    </nav>
+                </div>
+
+                <!-- Main Content -->
+                <div class="flex-1 overflow-auto">
+                    <!-- Header -->
+                    <div class="bg-white shadow-sm p-4 md:p-6 border-b">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center">
+                                <button onclick="toggleSidebar('employee')" class="md:hidden mr-3 text-gray-600">
+                                    <i class="fas fa-bars text-xl"></i>
+                                </button>
+                                <h1 class="text-xl md:text-2xl font-bold">Employee Dashboard</h1>
+                            </div>
+                            <div class="flex items-center space-x-2 md:space-x-4">
+                                <div class="text-right hidden md:block">
+                                    <div class="font-semibold text-sm md:text-base user-name-display">-</div>
+                                    <div class="text-xs md:text-sm text-gray-600 user-email-display"></div>
+                                </div>
+                                <div class="relative w-8 h-8 md:w-10 md:h-10 cursor-pointer" onclick="showAvatarUploadModal()" title="Change profile picture">
+                                    <img class="user-avatar-img hidden w-full h-full rounded-full object-cover" src="" alt="Avatar">
+                                    <div class="user-initials-avatar w-full h-full bg-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm md:text-base user-initials">..</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Section -->
+                    <div id="employeeDashboardSection" class="employee-section p-4 md:p-6">
+                        <!-- Stats -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6">
+                            <div class="stat-card rounded-xl p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div>
+                                        <div class="text-gray-600 text-sm">Assigned Clients</div>
+                                        <div id="empTotalClients" class="text-3xl font-bold mt-2">...</div>
+                                    </div>
+                                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-users text-blue-600 text-xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="stat-card rounded-xl p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div>
+                                        <div class="text-gray-600 text-sm">Applications Today</div>
+                                        <div id="empTodayApps" class="text-3xl font-bold mt-2">...</div>
+                                    </div>
+                                    <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-paper-plane text-purple-600 text-xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="stat-card rounded-xl p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div>
+                                        <div class="text-gray-600 text-sm">Total Applications</div>
+                                        <div id="empTotalApps" class="text-3xl font-bold mt-2">...</div>
+                                    </div>
+                                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-chart-line text-green-600 text-xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Today's Applications - Real Data -->
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-bold">Today's Applications</h3>
+                                <span id="empTodayDate" class="text-sm text-gray-400"></span>
+                            </div>
+                            <div id="empTodayTasksList" class="space-y-3">
+                                <div class="text-center text-gray-400 py-6"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><p>Loading...</p></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Clients Section -->
+                    <div id="employeeClientsSection" class="employee-section hidden p-6">
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <h2 class="text-2xl font-bold mb-6">My Assigned Clients</h2>
+                            <div id="empClientsGrid" class="grid md:grid-cols-2 gap-6">
+                                <div class="col-span-2 text-center text-gray-400 py-8">
+                                    <i class="fas fa-spinner fa-spin text-2xl mb-2"></i><p>Loading clients...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Applications Section -->
+                    <div id="employeeApplicationsSection" class="employee-section hidden p-4 md:p-6">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                            <div class="bg-white rounded-xl shadow-sm p-4 text-center">
+                                <div class="text-3xl font-extrabold gradient-text" id="empAppMonthTotal">0</div>
+                                <div class="text-xs text-gray-500 mt-1">This Month</div>
+                                <div class="w-full bg-gray-100 rounded-full h-2 mt-2">
+                                    <div id="empAppMonthBar" class="gradient-bg rounded-full h-2 transition-all duration-500" style="width:0%"></div>
+                                </div>
+                                <div class="text-xs text-gray-400 mt-1"><span id="empAppMonthPct">0</span>% of 300 target</div>
+                            </div>
+                            <div class="bg-white rounded-xl shadow-sm p-4 text-center">
+                                <div class="text-3xl font-extrabold text-green-600" id="empAppTodayTotal">0</div>
+                                <div class="text-xs text-gray-500 mt-1">Today</div>
+                            </div>
+                            <div class="bg-white rounded-xl shadow-sm p-4 text-center">
+                                <div class="text-3xl font-extrabold text-blue-600" id="empAppInterviews">0</div>
+                                <div class="text-xs text-gray-500 mt-1">Interviews</div>
+                            </div>
+                            <div class="bg-white rounded-xl shadow-sm p-4 text-center">
+                                <div class="text-3xl font-extrabold text-yellow-500" id="empAppOffers">0</div>
+                                <div class="text-xs text-gray-500 mt-1">Offers</div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-sm p-4 md:p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h2 class="text-xl font-bold">Job Applications</h2>
+                                <span class="text-sm text-gray-500">Day-wise view</span>
+                            </div>
+                            <div id="empAppsDaywise" class="overflow-y-auto" style="max-height:60vh;">
+                                <div class="text-center py-8 text-gray-400"><i class="fas fa-spinner fa-spin text-2xl text-purple-400"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Client Dashboard -->
+        <div id="clientDashboard" class="page hidden">
+            <div class="flex min-h-screen bg-gray-100">
+                <!-- Sidebar -->
+                <div id="clientSidebar" class="fixed md:relative w-64 bg-white shadow-lg h-full overflow-y-auto z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
+                    <div class="p-4 md:p-6 border-b flex justify-between items-center">
+                        <div class="flex items-center">
+                            <i class="fas fa-briefcase text-xl md:text-2xl gradient-text mr-2 md:mr-3"></i>
+                            <span class="text-lg md:text-xl font-bold">Client Portal</span>
+                        </div>
+                        <button onclick="toggleSidebar('client')" class="md:hidden text-gray-600">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    <nav class="p-4">
+                        <a onclick="showClientSection('dashboard', event)" class="sidebar-item active flex items-center p-3 rounded-lg mb-2 cursor-pointer">
+                            <i class="fas fa-chart-line mr-3"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a onclick="showClientSection('applications', event)" class="sidebar-item flex items-center p-3 rounded-lg mb-2 cursor-pointer">
+                            <i class="fas fa-paper-plane mr-3"></i>
+                            <span>My Applications</span>
+                        </a>
+                        <a onclick="showClientSection('atsChecker', event)" class="sidebar-item flex items-center p-3 rounded-lg mb-2 cursor-pointer">
+                            <i class="fas fa-file-alt mr-3"></i>
+                            <span>ATS Resume Checker</span>
+                        </a>
+                        <a onclick="showClientSection('payment', event)" class="sidebar-item flex items-center p-3 rounded-lg mb-2 cursor-pointer">
+                            <i class="fas fa-credit-card mr-3"></i>
+                            <span>Payment</span>
+                        </a>
+                        <a onclick="showClientSection('support', event)" class="sidebar-item flex items-center p-3 rounded-lg mb-2 cursor-pointer">
+                            <i class="fas fa-headset mr-3"></i>
+                            <span>Support</span>
+                        </a>
+                        <a onclick="logout()" class="sidebar-item flex items-center p-3 rounded-lg mb-2 cursor-pointer text-red-600">
+                            <i class="fas fa-sign-out-alt mr-3"></i>
+                            <span>Logout</span>
+                        </a>
+                    </nav>
+                </div>
+
+                <!-- Main Content -->
+                <div class="flex-1 overflow-auto">
+                    <!-- Header -->
+                    <div class="bg-white shadow-sm p-4 md:p-6 border-b">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center">
+                                <button onclick="toggleSidebar('client')" class="md:hidden mr-3 text-gray-600">
+                                    <i class="fas fa-bars text-xl"></i>
+                                </button>
+                                <h1 class="text-lg md:text-2xl font-bold">Welcome Back!</h1>
+                            </div>
+                            <div class="flex items-center space-x-2 md:space-x-4">
+                                <div class="text-right hidden md:block">
+                                    <div class="font-semibold text-sm md:text-base user-name-display">-</div>
+                                    <div class="text-xs md:text-sm text-gray-600" id="clientPlanBadge">Client</div>
+                                </div>
+                                <div class="relative w-8 h-8 md:w-10 md:h-10 cursor-pointer" onclick="showAvatarUploadModal()" title="Change profile picture">
+                                    <img class="user-avatar-img hidden w-full h-full rounded-full object-cover" src="" alt="Avatar">
+                                    <div class="user-initials-avatar w-full h-full bg-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm md:text-base user-initials">..</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Section -->
+                    <div id="clientDashboardSection" class="client-section p-4 md:p-6">
+                        <!-- Stats -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-6">
+                            <div class="stat-card rounded-xl p-4 md:p-6">
+                                <div class="text-gray-600 text-xs md:text-sm mb-1 md:mb-2">Total Applications</div>
+                                <div id="clientTotalApps" class="text-2xl md:text-3xl font-bold">...</div>
+                            </div>
+                            <div class="stat-card rounded-xl p-4 md:p-6">
+                                <div class="text-gray-600 text-xs md:text-sm mb-1 md:mb-2">Interviews</div>
+                                <div id="clientInterviews" class="text-2xl md:text-3xl font-bold text-yellow-600">...</div>
+                            </div>
+                            <div class="stat-card rounded-xl p-4 md:p-6">
+                                <div class="text-gray-600 text-xs md:text-sm mb-1 md:mb-2">Offers</div>
+                                <div id="clientOffers" class="text-2xl md:text-3xl font-bold text-green-600">...</div>
+                            </div>
+                            <div class="stat-card rounded-xl p-4 md:p-6">
+                                <div class="text-gray-600 text-xs md:text-sm mb-1 md:mb-2">Success Rate</div>
+                                <div class="text-2xl md:text-3xl font-bold text-purple-600">-</div>
+                            </div>
+                        </div>
+
+                        <!-- Today's Applications — Real Data -->
+                        <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-bold">Recent Applications</h3>
+                                <button onclick="showClientSection('applications', event)" class="text-sm text-purple-600 font-semibold hover:underline">View All →</button>
+                            </div>
+                            <div id="clientRecentApps" class="space-y-3">
+                                <div class="text-center text-gray-400 py-4"><i class="fas fa-spinner fa-spin mr-2"></i>Loading...</div>
+                            </div>
+                        </div>
+
+                        <!-- Service Info — Real Data -->
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-bold">Your Service Plan</h3>
+                                <span id="clientSubBadge" class="status-badge status-pending">No Plan</span>
+                            </div>
+                            <div class="p-4 bg-purple-50 rounded-lg">
+                                <div id="clientSubStatus" class="font-semibold text-purple-700 mb-1">No active subscription</div>
+                                <div id="clientAppsLimit" class="text-sm text-gray-600">—</div>
+                            </div>
+                            <button onclick="showClientSection('payment', event)" class="mt-4 w-full gradient-bg text-white py-2 rounded-lg font-semibold text-sm">
+                                <i class="fas fa-credit-card mr-2"></i>View / Upgrade Plan
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Applications Section -->
+                    <div id="clientApplicationsSection" class="client-section hidden p-6">
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <h2 class="text-2xl font-bold mb-6">All Applications</h2>
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead>
+                                        <tr class="border-b">
+                                            <th class="text-left p-4">Company</th>
+                                            <th class="text-left p-4">Position</th>
+                                            <th class="text-left p-4">Location</th>
+                                            <th class="text-left p-4">Applied Date</th>
+                                            <th class="text-left p-4">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="clientApplicationsTableBody">
+                                        <tr><td colspan="5" class="p-4 text-center text-gray-500">Loading applications...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ATS Resume Checker Section -->
+                    <div id="clientAtsCheckerSection" class="client-section hidden p-4 md:p-6">
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <div class="mb-6">
+                                <h2 class="text-2xl md:text-3xl font-bold mb-2">🤖 ATS Resume Checker</h2>
+                                <p class="text-gray-600">Upload your CV/resume and our AI will score it for ATS compatibility</p>
+                            </div>
+
+                            <!-- Upload Zone — single atsFile input, no duplicate IDs -->
+                            <div class="bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-dashed border-purple-300 rounded-xl p-8 mb-6 text-center">
+                                <div class="mb-4">
+                                    <i class="fas fa-cloud-upload-alt text-6xl text-purple-400"></i>
+                                </div>
+                                <h3 class="text-xl font-bold mb-2">Upload Your Resume</h3>
+                                <p class="text-gray-600 mb-4">Supported formats: PDF, DOC, DOCX (Max 5MB)</p>
+
+                                <!-- Single file input — api.js targets #atsFile -->
+                                <input type="file" id="atsFile" accept=".pdf,.doc,.docx" class="hidden" onchange="handleResumeUpload(event)">
+                                <button onclick="document.getElementById('atsFile').click()"
+                                    class="gradient-bg text-white px-8 py-3 rounded-lg font-semibold hover:opacity-90 inline-flex items-center">
+                                    <i class="fas fa-upload mr-2"></i>Choose File
+                                </button>
+                                <!-- SINGLE fileName — api.js writes filename here -->
+                                <div id="fileName" class="mt-3 text-sm text-gray-600 font-semibold text-purple-700"></div>
+                            </div>
+
+                            <!-- Results — hidden until upload; api.js unhides this -->
+                            <div id="atsResults" class="hidden">
+                                <!-- Score Row -->
+                                <div class="bg-white border border-gray-200 rounded-xl p-6 mb-6">
+                                    <div class="flex flex-col md:flex-row items-center gap-6">
+                                        <!-- SVG Score Circle — api.js targets #scoreCircle and #scoreValue -->
+                                        <div class="relative w-40 h-40 flex-shrink-0">
+                                            <svg class="transform -rotate-90 w-40 h-40">
+                                                <circle cx="80" cy="80" r="56" stroke="#e5e7eb" stroke-width="12" fill="none"></circle>
+                                                <circle id="scoreCircle"
+                                                    cx="80" cy="80" r="56"
+                                                    stroke="#22c55e" stroke-width="12" fill="none"
+                                                    stroke-dasharray="351.68" stroke-dashoffset="351.68"
+                                                    stroke-linecap="round"></circle>
+                                            </svg>
+                                            <div class="absolute inset-0 flex items-center justify-center">
+                                                <span id="scoreValue" class="text-3xl font-bold gradient-text">0%</span>
+                                            </div>
+                                        </div>
+                                        <!-- Text message — api.js writes here -->
+                                        <div id="scoreMessage" class="flex-1 text-center md:text-left"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Detailed Checks Grid — api.js populates #atsDetails -->
+                                <div id="atsDetails" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6"></div>
+
+                                <!-- Action Buttons -->
+                                <div class="flex flex-col sm:flex-row gap-4 mt-4">
+                                    <button onclick="document.getElementById('atsFile').click()"
+                                        class="flex-1 border-2 border-purple-600 text-purple-600 px-6 py-3 rounded-lg font-semibold hover:bg-purple-50 inline-flex items-center justify-center">
+                                        <i class="fas fa-redo mr-2"></i>Check Another Resume
+                                    </button>
+                                    <button onclick="requestOptimization()"
+                                        class="flex-1 gradient-bg text-white px-6 py-3 rounded-lg font-semibold inline-flex items-center justify-center">
+                                        <i class="fas fa-magic mr-2"></i>Request Professional Optimization
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Section -->
+                    <div id="clientPaymentSection" class="client-section hidden p-6">
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <h2 class="text-2xl font-bold mb-6">Payment Details</h2>
+                            <div id="clientPaymentContent" class="max-w-2xl">
+                                <div class="text-center py-12 text-gray-400">
+                                    <i class="fas fa-spinner fa-spin text-3xl mb-3 block text-purple-400"></i>
+                                    <p>Loading payment details...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                                        <!-- Our Plans Section -->
+                    <div id="clientPlansSection" class="client-section hidden p-4 md:p-6">
+                        <!-- Expiry Warning Banner -->
+                        <div id="clientExpiryWarning" class="hidden mb-5 bg-yellow-50 border-2 border-yellow-300 rounded-2xl p-4 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-clock text-yellow-500 text-xl"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-bold text-yellow-800">Subscription Expiring Soon!</p>
+                                <p class="text-sm text-yellow-600">Only <strong id="expiryDaysLeft">—</strong> day(s) left — renew below to continue</p>
+                            </div>
+                        </div>
+                        <!-- Current Plan Banner -->
+                        <div id="clientCurrentPlanBanner" class="hidden mb-6 bg-gradient-to-r from-purple-600 to-purple-800 rounded-2xl p-5 text-white">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-xs opacity-75 mb-1">Currently Active</div>
+                                    <div class="text-xl font-bold" id="clientActivePlanName">—</div>
+                                    <div class="text-sm opacity-80 mt-1">Valid until <span id="clientActivePlanExpiry">—</span></div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="bg-green-400 text-white px-3 py-1 rounded-full text-xs font-bold mb-2">ACTIVE ✓</div>
+                                    <div class="text-2xl font-extrabold" id="clientActivePlanApps">—</div>
+                                    <div class="text-xs opacity-75">apps/day</div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Plans Grid -->
+                        <div id="clientPlansGrid" class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                            <div class="md:col-span-3 text-center py-10 text-gray-400">
+                                <i class="fas fa-spinner fa-spin text-3xl text-purple-400 mb-3 block"></i>
+                                <p>Loading plans...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Support Section -->
+                    <div id="clientSupportSection" class="client-section hidden p-6">
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <h2 class="text-2xl font-bold mb-6">Support</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <a href="https://wa.me/353874786869" target="_blank" class="card-hover border-2 border-green-500 rounded-xl p-8 text-center block">
+                                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <i class="fab fa-whatsapp text-green-600 text-3xl"></i>
+                                    </div>
+                                    <h3 class="text-xl font-bold mb-2">WhatsApp Support</h3>
+                                    <p class="text-gray-600 mb-4">Get instant help via WhatsApp</p>
+                                    <div class="text-lg font-bold text-green-600 mb-2">+353 874 786 869</div>
+                                    <button class="bg-green-500 text-white px-6 py-2 rounded-lg font-semibold">
+                                        Chat Now
+                                    </button>
+                                </a>
+                                <a href="tel:+353831683090" class="card-hover border-2 border-purple-500 rounded-xl p-8 text-center block">
+                                    <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <i class="fas fa-phone text-purple-600 text-3xl"></i>
+                                    </div>
+                                    <h3 class="text-xl font-bold mb-2">Call Support</h3>
+                                    <p class="text-gray-600 mb-4">Speak to our support team</p>
+                                    <div class="text-lg font-bold text-purple-600 mb-2">+353 83 168 3090</div>
+                                    <button class="gradient-bg text-white px-6 py-2 rounded-lg font-semibold">
+                                        Call Now
+                                    </button>
+                                </a>
+                            </div>
+                            <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+                                <p class="text-blue-800 font-semibold">📞 24/7 WhatsApp & Call Support Available</p>
+                                <p class="text-blue-600 text-sm mt-1">We're here to help you every step of the way</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modals -->
+        <!-- Login Modal -->
+        <div id="loginModal" class="modal">
+            <div class="bg-white rounded-xl p-6 md:p-8 max-w-md w-full mx-4 my-4 overflow-y-auto max-h-[90vh]">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Welcome Back</h2>
+                    <button onclick="closeModal('loginModal')" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold mb-2">Email</label>
+                        <input type="email" id="loginEmail" class="w-full border rounded-lg px-4 py-3" placeholder="your@email.com" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold mb-2">Password</label>
+                        <input type="password" id="loginPassword" class="w-full border rounded-lg px-4 py-3" placeholder="Your password" required>
+                    </div>
+                    <button type="submit" class="w-full gradient-bg text-white py-3 rounded-lg font-semibold">Sign In</button>
+                    <div class="text-center mt-4">
+                        <a href="#" onclick="showRegister()" class="text-purple-600 hover:text-purple-700">Don't have an account? Register</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Register Modal -->
+        <div id="registerModal" class="modal">
+            <div class="bg-white rounded-xl p-6 md:p-8 max-w-md w-full mx-4 my-4 overflow-y-auto max-h-[90vh]">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Create Account</h2>
+                    <button onclick="closeModal('registerModal')" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <form id="registerForm" onsubmit="handleRegister(event)">
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold mb-2">Full Name</label>
+                        <input type="text" id="registerName" class="w-full border rounded-lg px-4 py-3" placeholder="Your full name" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold mb-2">Email</label>
+                        <input type="email" id="registerEmail" class="w-full border rounded-lg px-4 py-3" placeholder="your@email.com" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold mb-2">Password</label>
+                        <input type="password" id="registerPassword" class="w-full border rounded-lg px-4 py-3" placeholder="Min 8 chars, 1 uppercase, 1 number, 1 special" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold mb-2">Phone (optional)</label>
+                        <input type="text" id="registerPhone" class="w-full border rounded-lg px-4 py-3" placeholder="+91 9999999999">
+                    </div>
+                    <button type="submit" class="w-full gradient-bg text-white py-3 rounded-lg font-semibold">Create Account</button>
+                    <div class="text-center mt-4">
+                        <a href="#" onclick="showLogin()" class="text-purple-600 hover:text-purple-700">Already have an account? Login</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Payment Modal -->
+        <div id="paymentModal" class="modal">
+            <div class="bg-white rounded-xl p-6 md:p-8 max-w-md w-full mx-4 my-4 overflow-y-auto max-h-[90vh]">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Complete Payment</h2>
+                    <button onclick="closeModal('paymentModal')" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div id="paymentDetails" class="mb-6 p-4 bg-gray-50 rounded-lg"></div>
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold mb-3">Payment Method</label>
+                    <div class="space-y-3">
+                        <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                            <input type="radio" name="paymentMethod" value="stripe" class="mr-3" checked>
+                            <i class="fab fa-stripe text-blue-600 text-xl mr-2"></i> Stripe
+                        </label>
+                        <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                            <input type="radio" name="paymentMethod" value="paypal" class="mr-3">
+                            <i class="fab fa-paypal text-blue-800 text-xl mr-2"></i> PayPal
+                        </label>
+                        <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                            <input type="radio" name="paymentMethod" value="bank_transfer" class="mr-3">
+                            <i class="fas fa-university text-gray-600 text-xl mr-2"></i> Bank Transfer
+                        </label>
+                    </div>
+                </div>
+                <button onclick="processPayment()" class="w-full gradient-bg text-white py-3 rounded-lg font-semibold">Complete Payment</button>
+            </div>
+        </div>
+
+        <!-- Apply Job Modal (Employee) -->
+        <div id="applyJobModal" class="modal">
+            <div class="bg-white rounded-xl p-6 md:p-8 max-w-md w-full mx-4 my-4 overflow-y-auto max-h-[90vh]">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Apply for Jobs</h2>
+                    <button onclick="closeModal('applyJobModal')" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">Client</label>
+                    <input type="text" id="clientNameField" class="w-full border rounded-lg px-4 py-3 bg-gray-100" readonly>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">Company Name *</label>
+                    <input type="text" id="jobCompany" class="w-full border rounded-lg px-4 py-3" placeholder="e.g. Google, Microsoft">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">Job Title *</label>
+                    <input type="text" id="jobTitle" class="w-full border rounded-lg px-4 py-3" placeholder="e.g. Software Engineer">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">Job URL</label>
+                    <input type="text" id="jobUrl" class="w-full border rounded-lg px-4 py-3" placeholder="https://...">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">Location</label>
+                    <input type="text" id="jobLocation" class="w-full border rounded-lg px-4 py-3" placeholder="e.g. Dublin, Ireland">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">Portal</label>
+                    <input type="text" id="jobPortal" class="w-full border rounded-lg px-4 py-3" placeholder="e.g. LinkedIn, Indeed">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold mb-2">Notes</label>
+                    <textarea id="jobNotes" class="w-full border rounded-lg px-4 py-3" rows="3" placeholder="Any notes..."></textarea>
+                </div>
+                <button onclick="submitJobApplication()" class="w-full gradient-bg text-white py-3 rounded-lg font-semibold">Submit Application</button>
+            </div>
+        </div>
+
+        <!-- Assign Client Modal (Admin) -->
+        <div id="assignJobModal" class="modal">
+            <div class="bg-white rounded-xl p-6 md:p-8 max-w-md w-full mx-4 my-4 overflow-y-auto max-h-[90vh]">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Assign Client to Employee</h2>
+                    <button onclick="closeModal('assignJobModal')" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">Select Client</label>
+                    <select id="assignClientSelect" class="w-full border rounded-lg px-4 py-3">
+                        <option value="">Loading clients...</option>
+                    </select>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold mb-2">Select Employee</label>
+                    <select id="assignEmployeeSelect" class="w-full border rounded-lg px-4 py-3">
+                        <option value="">Loading employees...</option>
+                    </select>
+                </div>
+                <button onclick="confirmAssignment()" class="w-full gradient-bg text-white py-3 rounded-lg font-semibold">Assign Client</button>
+            </div>
+        </div>
+
+
+        <!-- OTP Verification Modal -->
+        <div id="otpModal" class="modal">
+            <div class="bg-white rounded-xl p-6 md:p-8 max-w-md w-full mx-4 my-4 overflow-y-auto max-h-[90vh]">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Verify Email</h2>
+                    <button onclick="closeModal('otpModal')" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times text-xl"></i></button>
+                </div>
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-envelope text-purple-600 text-2xl"></i>
+                    </div>
+                    <p class="text-gray-600">We sent a 6-digit OTP to your email.</p>
+                    <p id="otpEmailDisplay" class="font-semibold text-purple-600 mt-1"></p>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">Enter OTP</label>
+                    <input type="text" id="otpInput" maxlength="6" class="w-full border rounded-lg px-4 py-3 text-center text-2xl tracking-widest font-bold" placeholder="000000">
+                </div>
+                <button onclick="verifyOTP()" class="w-full gradient-bg text-white py-3 rounded-lg font-semibold mb-3">Verify Email</button>
+                <div class="text-center">
+                    <button onclick="resendOTP()" class="text-purple-600 hover:text-purple-800 text-sm">Resend OTP</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Employee Modal -->
+        <div id="addEmployeeModal" class="modal">
+            <div class="bg-white rounded-xl p-6 md:p-8 max-w-md w-full mx-4 my-4 overflow-y-auto max-h-[90vh]">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Add Employee</h2>
+                    <button onclick="closeModal('addEmployeeModal')" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times text-xl"></i></button>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">Full Name *</label>
+                    <input type="text" id="empName" class="w-full border rounded-lg px-4 py-3" placeholder="Employee full name">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">Email *</label>
+                    <input type="email" id="empEmail" class="w-full border rounded-lg px-4 py-3" placeholder="employee@hope-irl.com">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">Password *</label>
+                    <input type="password" id="empPassword" class="w-full border rounded-lg px-4 py-3" placeholder="Min 8 chars, 1 upper, 1 number, 1 special">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">Phone</label>
+                    <input type="text" id="empPhone" class="w-full border rounded-lg px-4 py-3" placeholder="+91 9999999999">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">Department</label>
+                    <input type="text" id="empDepartment" class="w-full border rounded-lg px-4 py-3" placeholder="e.g. Career Support">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold mb-2">Max Clients</label>
+                    <input type="number" id="empMaxClients" class="w-full border rounded-lg px-4 py-3" value="15" min="1" max="50">
+                </div>
+                <button onclick="addEmployee()" class="w-full gradient-bg text-white py-3 rounded-lg font-semibold">Add Employee</button>
+            </div>
+        </div>
+
+        <!-- Edit Client Modal -->
+        <div id="editClientModal" class="modal">
+            <div class="bg-white rounded-xl p-6 md:p-8 max-w-md w-full mx-4 my-4 overflow-y-auto max-h-[90vh]">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Edit Client</h2>
+                    <button onclick="closeModal('editClientModal')" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times text-xl"></i></button>
+                </div>
+                <input type="hidden" id="editClientId">
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">Full Name</label>
+                    <input type="text" id="editClientName" class="w-full border rounded-lg px-4 py-3">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">Phone</label>
+                    <input type="text" id="editClientPhone" class="w-full border rounded-lg px-4 py-3">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold mb-2">Status</label>
+                    <select id="editClientStatus" class="w-full border rounded-lg px-4 py-3">
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+                <button onclick="saveEditClient()" class="w-full gradient-bg text-white py-3 rounded-lg font-semibold">Save Changes</button>
+            </div>
+        </div>
+
+        <!-- Edit Employee Modal -->
+        <div id="editEmployeeModal" class="modal">
+            <div class="bg-white rounded-xl p-6 md:p-8 max-w-md w-full mx-4 my-4 overflow-y-auto max-h-[90vh]">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Edit Employee</h2>
+                    <button onclick="closeModal('editEmployeeModal')" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times text-xl"></i></button>
+                </div>
+                <input type="hidden" id="editEmployeeId">
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">Full Name</label>
+                    <input type="text" id="editEmployeeName" class="w-full border rounded-lg px-4 py-3">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">Phone</label>
+                    <input type="text" id="editEmployeePhone" class="w-full border rounded-lg px-4 py-3">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">Department</label>
+                    <input type="text" id="editEmployeeDept" class="w-full border rounded-lg px-4 py-3">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">Max Clients</label>
+                    <input type="number" id="editEmployeeMax" class="w-full border rounded-lg px-4 py-3" min="1" max="50">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold mb-2">Status</label>
+                    <select id="editEmployeeStatus" class="w-full border rounded-lg px-4 py-3">
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+                <button onclick="saveEditEmployee()" class="w-full gradient-bg text-white py-3 rounded-lg font-semibold">Save Changes</button>
+            </div>
+        </div>
+
+        <!-- Add/Edit Service Modal -->
+        <div id="serviceModal" class="modal">
+            <div class="bg-white rounded-xl p-6 md:p-8 max-w-md w-full mx-4 my-4 overflow-y-auto max-h-[90vh]">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 id="serviceModalTitle" class="text-2xl font-bold">Add Service</h2>
+                    <button onclick="closeModal('serviceModal')" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times text-xl"></i></button>
+                </div>
+                <input type="hidden" id="serviceId">
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">Plan Name *</label>
+                    <input type="text" id="serviceName" class="w-full border rounded-lg px-4 py-3" placeholder="e.g. Professional">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">Price (EUR) *</label>
+                    <input type="number" id="servicePrice" class="w-full border rounded-lg px-4 py-3" placeholder="179" min="0" step="0.01">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">Applications / Day</label>
+                    <input type="number" id="serviceAppsPerDay" class="w-full border rounded-lg px-4 py-3" placeholder="10" min="1">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold mb-2">Features (comma separated)</label>
+                    <textarea id="serviceFeatures" class="w-full border rounded-lg px-4 py-3" rows="3" placeholder="CV Review, Cover Letter, ATS Check, WhatsApp Support"></textarea>
+                </div>
+                <button onclick="saveService()" class="w-full gradient-bg text-white py-3 rounded-lg font-semibold">Save Service</button>
+            </div>
+        </div>
+
+        <!-- Delete Confirm Modal -->
+        <div id="deleteModal" class="modal">
+            <div class="bg-white rounded-xl p-8 max-w-sm w-full m-4 text-center">
+                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-trash text-red-600 text-2xl"></i>
+                </div>
+                <h2 class="text-xl font-bold mb-2">Confirm Delete</h2>
+                <p id="deleteMessage" class="text-gray-600 mb-6">Are you sure you want to delete this?</p>
+                <input type="hidden" id="deleteId">
+                <input type="hidden" id="deleteType">
+                <div class="flex gap-4">
+                    <button onclick="closeModal('deleteModal')" class="flex-1 border border-gray-300 text-gray-700 py-3 rounded-lg font-semibold">Cancel</button>
+                    <button onclick="confirmDelete()" class="flex-1 bg-red-600 text-white py-3 rounded-lg font-semibold">Delete</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CV Upload Modal -->
+        <div id="cvUploadModal" class="modal">
+            <div class="bg-white rounded-xl p-6 md:p-8 max-w-md w-full mx-4 my-4 overflow-y-auto max-h-[90vh]">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Upload CV / Resume</h2>
+                    <button onclick="closeModal('cvUploadModal')" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times text-xl"></i></button>
+                </div>
+                <div id="cvDropZone" class="border-2 border-dashed border-purple-300 rounded-xl p-8 text-center mb-4 cursor-pointer hover:bg-purple-50 transition"
+                     onclick="document.getElementById('cvFileInput').click()">
+                    <i class="fas fa-cloud-upload-alt text-4xl text-purple-400 mb-3"></i>
+                    <p class="text-gray-600 font-semibold">Click to upload or drag & drop</p>
+                    <p class="text-sm text-gray-400 mt-1">PDF, DOC, DOCX — Max 10MB</p>
+                    <p id="cvFileName" class="mt-3 text-purple-600 font-semibold"></p>
+                </div>
+                <input type="file" id="cvFileInput" accept=".pdf,.doc,.docx" class="hidden" onchange="cvFileSelected(this)">
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">Document Type</label>
+                    <select id="cvDocType" class="w-full border rounded-lg px-4 py-3">
+                        <option value="cv">CV / Resume</option>
+                        <option value="cover_letter">Cover Letter</option>
+                        <option value="certificate">Certificate</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <button onclick="uploadCV()" class="w-full gradient-bg text-white py-3 rounded-lg font-semibold">
+                    <i class="fas fa-upload mr-2"></i>Upload Document
+                </button>
+            </div>
+        </div>
+
+        <!-- Revolut Payment Modal -->
+        <div id="paymentGatewayModal" class="modal">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full m-4 overflow-hidden">
+                <div class="bg-gradient-to-r from-purple-600 to-purple-800 p-6 text-white">
+                    <div class="flex justify-between items-start">
+                        <div><h2 class="text-xl font-bold mb-1">Complete Payment</h2><p class="text-purple-200 text-sm">Secure payment via Revolut</p></div>
+                        <button onclick="closeModal('paymentGatewayModal')" class="text-white opacity-70 hover:opacity-100"><i class="fas fa-times text-xl"></i></button>
+                    </div>
+                    <div class="mt-4 bg-white bg-opacity-20 rounded-xl p-4">
+                        <p class="text-sm opacity-80 mb-1">Selected Plan</p>
+                        <p class="text-xl font-bold" id="gatewayPlanName">Professional Plan</p>
+                        <p class="text-3xl font-extrabold mt-1" id="gatewayPlanPrice">€179</p>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="flex items-start gap-4 mb-5">
+                        <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-700 font-bold flex items-center justify-center flex-shrink-0 text-sm">1</div>
+                        <div class="flex-1">
+                            <p class="font-semibold text-gray-800 mb-1">Send payment via Revolut</p>
+                            <p class="text-sm text-gray-500 mb-3">Tap below to open Revolut and send the exact amount</p>
+                            <a id="revolutPayLink" href="https://revolut.me/subrah2xwv" target="_blank"
+                                class="flex items-center justify-center gap-3 w-full gradient-bg text-white py-3 rounded-xl font-bold text-lg hover:opacity-90 transition">
+                                💸 Pay via Revolut
+                            </a>
+                        </div>
+                    </div>
+                    <div class="border-l-2 border-dashed border-gray-200 ml-4 mb-5 h-4"></div>
+                    <div class="flex items-start gap-4 mb-5">
+                        <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-700 font-bold flex items-center justify-center flex-shrink-0 text-sm">2</div>
+                        <div class="flex-1">
+                            <p class="font-semibold text-gray-800 mb-1">Enter Transaction Reference</p>
+                            <p class="text-sm text-gray-500 mb-3">Copy the reference from Revolut after paying</p>
+                            <input id="revolutTxRef" type="text" placeholder="e.g. R24XXXXXABCD or your note"
+                                class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400">
+                        </div>
+                    </div>
+                    <div class="border-l-2 border-dashed border-gray-200 ml-4 mb-5 h-4"></div>
+                    <div class="flex items-start gap-4 mb-6">
+                        <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-700 font-bold flex items-center justify-center flex-shrink-0 text-sm">3</div>
+                        <div class="flex-1">
+                            <p class="font-semibold text-gray-800 mb-1">Submit for confirmation</p>
+                            <p class="text-sm text-gray-500 mb-3">Admin verifies and activates within <strong>1-2 hours</strong></p>
+                            <button onclick="submitRevolutPayment()" class="w-full gradient-bg text-white py-3 rounded-xl font-bold hover:opacity-90 transition">
+                                <i class="fas fa-paper-plane mr-2"></i>Submit Payment Request
+                            </button>
+                        </div>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-700 flex items-start gap-2">
+                        <i class="fas fa-info-circle mt-0.5 flex-shrink-0"></i>
+                        <span>After submission, our team verifies your payment and activates your subscription. You'll receive a confirmation email.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Payment Submitted Modal -->
+        <div id="paymentSubmittedModal" class="modal">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full m-4 p-8 text-center">
+                <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-check-circle text-green-500 text-4xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-2">Payment Submitted! 🎉</h2>
+                <p class="text-gray-600 mb-2">Your payment request has been received.</p>
+                <p class="text-gray-500 text-sm mb-6">We'll verify and activate your <strong id="submittedPlanName"></strong> within <strong>1-2 hours</strong>. Check your email for confirmation.</p>
+                <div class="bg-gray-50 rounded-xl p-4 mb-6 text-left space-y-2">
+                    <div class="flex justify-between text-sm"><span class="text-gray-500">Plan</span><span class="font-semibold" id="submittedPlanDetail"></span></div>
+                    <div class="flex justify-between text-sm"><span class="text-gray-500">Amount</span><span class="font-semibold" id="submittedAmountDetail"></span></div>
+                    <div class="flex justify-between text-sm"><span class="text-gray-500">Reference</span><span class="font-semibold font-mono text-xs" id="submittedRefDetail"></span></div>
+                </div>
+                <button onclick="closeModal('paymentSubmittedModal')" class="w-full gradient-bg text-white py-3 rounded-xl font-bold">Got it!</button>
+            </div>
+        </div>
+
+    </div><!-- end #app -->
+
+    <!-- ── Avatar Upload Modal ───────────────────────────────── -->
+    <div id="avatarUploadModal" class="modal">
+        <div class="bg-white rounded-2xl p-6 md:p-8 w-full max-w-md mx-4 my-4 shadow-xl overflow-y-auto max-h-[90vh]">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold">Update Profile Picture</h2>
+                <button onclick="closeModal('avatarUploadModal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="text-center mb-6">
+                <img id="avatarPreview" src="" alt="Preview" class="hidden w-32 h-32 rounded-full object-cover mx-auto mb-4 border-4 border-purple-200">
+                <div class="w-32 h-32 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4" id="avatarPlaceholder">
+                    <i class="fas fa-camera text-4xl text-purple-400"></i>
+                </div>
+                <label for="avatarUploadInput" class="gradient-bg text-white px-6 py-2 rounded-lg cursor-pointer font-semibold inline-block">
+                    <i class="fas fa-upload mr-2"></i>Choose Image
+                </label>
+                <input type="file" id="avatarUploadInput" accept="image/*" class="hidden" onchange="avatarFileSelected(this)">
+                <p class="text-xs text-gray-400 mt-2">JPG, PNG, WebP — max 5MB</p>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="closeModal('avatarUploadModal')" class="flex-1 border border-gray-300 py-3 rounded-xl font-semibold text-gray-600">
+                    Cancel
+                </button>
+                <button onclick="uploadAvatar()" class="flex-1 gradient-bg text-white py-3 rounded-xl font-semibold">
+                    <i class="fas fa-save mr-2"></i>Save Photo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Real-time Connection Indicator ────────────────────── -->
+    <div id="realtimeIndicator" style="position:fixed;bottom:1rem;left:1rem;z-index:9998;display:none;
+         background:rgba(0,0,0,0.7);color:#fff;padding:0.4rem 0.8rem;border-radius:999px;font-size:0.7rem;font-weight:600;">
+        <span id="rtDot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;margin-right:6px;"></span>
+        <span id="rtLabel">Live</span>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="api.js"></script>
+</body>
+</html>
