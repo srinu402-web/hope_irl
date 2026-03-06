@@ -35,7 +35,7 @@ const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_ROUNDS) || 12;
 // ──────────────────────────────────────────────────────────────
 const db = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false },
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: true } : false,
     max: 10,
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 5_000,
@@ -239,6 +239,7 @@ app.use(cors({
         if (/^https?:\/\/(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.)\d+\.\d+(:\d+)?$/.test(origin)) return cb(null, true);
         // Production allowed origins from env
         if (allowedOrigins.includes(origin)) return cb(null, true);
+        if (origin && origin.endsWith('.onrender.com')) return cb(null, true);
         if (process.env.NODE_ENV !== 'production') return cb(null, true);
         cb(new Error(`CORS: ${origin} not allowed`));
     },
