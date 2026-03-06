@@ -33,6 +33,7 @@ const API_BASE = (() => {
     const h = location.hostname;
     // 2. Local development (PC browser)
     if (!h || h === 'localhost' || h === '127.0.0.1') return 'http://localhost:3001/api';
+    if (h === 'hope-irl-frontend.onrender.com') return 'https://hope-irl.onrender.com/api';
     // 3. LAN / Mobile on same WiFi (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
     //    Live Server runs frontend on :5500, but Express backend runs on :3001
     //    Mobile needs to hit the PC IP on port 3001 directly
