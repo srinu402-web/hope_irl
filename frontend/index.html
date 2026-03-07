@@ -737,10 +737,11 @@
                                             <th class="text-left p-4">Location</th>
                                             <th class="text-left p-4">Applied Date</th>
                                             <th class="text-left p-4">Status</th>
+                                            <th class="text-left p-4">Resume</th>
                                         </tr>
                                     </thead>
                                     <tbody id="clientApplicationsTableBody">
-                                        <tr><td colspan="5" class="p-4 text-center text-gray-500">Loading applications...</td></tr>
+                                        <tr><td colspan="6" class="p-4 text-center text-gray-500">Loading applications...</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -1027,9 +1028,13 @@
                     <label class="block text-sm font-semibold mb-2">Portal</label>
                     <input type="text" id="jobPortal" class="w-full border rounded-lg px-4 py-3" placeholder="e.g. LinkedIn, Indeed">
                 </div>
-                <div class="mb-6">
+                <div class="mb-4">
                     <label class="block text-sm font-semibold mb-2">Notes</label>
                     <textarea id="jobNotes" class="w-full border rounded-lg px-4 py-3" rows="3" placeholder="Any notes..."></textarea>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold mb-2">Resume Google Drive Link</label>
+                    <input type="url" id="jobResumeLink" class="w-full border rounded-lg px-4 py-3" placeholder="https://drive.google.com/...">
                 </div>
                 <button onclick="submitJobApplication()" class="w-full gradient-bg text-white py-3 rounded-lg font-semibold">Submit Application</button>
             </div>

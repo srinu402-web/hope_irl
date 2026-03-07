@@ -940,6 +940,7 @@ async function loadClientDashboard() {
                         <div>
                             <div class="font-semibold text-sm">${escHtml(a.job_title)}</div>
                             <div class="text-xs text-gray-500">${escHtml(a.company_name)} · ${new Date(a.applied_at).toLocaleDateString('en-GB')}</div>
+                            ${a.resume_link ? `<a href="${escHtml(a.resume_link)}" target="_blank" class="text-xs text-purple-600 hover:underline"><i class="fas fa-file-alt mr-1"></i>View Resume</a>` : ''}
                         </div>
                     </div>
                     <span class="status-badge status-${a.status} flex-shrink-0">${a.status.charAt(0).toUpperCase() + a.status.slice(1)}</span>
@@ -960,8 +961,9 @@ async function loadClientDashboard() {
                     <td class="p-4">${escHtml(a.location || '-')}</td>
                     <td class="p-4">${new Date(a.applied_at).toLocaleDateString('en-GB')}</td>
                     <td class="p-4"><span class="status-badge status-${a.status}">${a.status.charAt(0).toUpperCase() + a.status.slice(1)}</span></td>
+                    <td class="p-4">${a.resume_link ? `<a href="${escHtml(a.resume_link)}" target="_blank" class="text-purple-600 hover:underline text-sm"><i class="fas fa-external-link-alt mr-1"></i>Resume</a>` : '<span class="text-gray-400 text-sm">-</span>'}</td>
                 </tr>`).join('')
-            : `<tr><td colspan="5" class="p-6 text-center text-gray-500">No applications yet. Your consultant will apply on your behalf.</td></tr>`;
+            : `<tr><td colspan="6" class="p-6 text-center text-gray-500">No applications yet. Your consultant will apply on your behalf.</td></tr>`;
         }
 
         // ── Refresh subscription badge (clientSubBadge, clientSubStatus, clientAppsLimit)
@@ -988,12 +990,12 @@ async function submitJobApplication() {
     try {
         await apiCall('/applications', {
             method: 'POST',
-            body: { client_id: clientId, company_name: company, job_title: title, job_url: url, location, portal, notes },
+            body: { client_id: clientId, company_name: company, job_title: title, job_url: url, location, portal, notes, resume_link: document.getElementById('jobResumeLink')?.value?.trim() || null },
         });
         showToast('Application submitted! ✅', 'success');
         closeModal('applyJobModal');
         // Clear fields
-        ['jobCompany','jobTitle','jobUrl','jobLocation','jobPortal','jobNotes'].forEach(id => {
+        ['jobCompany','jobTitle','jobUrl','jobLocation','jobPortal','jobNotes','jobResumeLink'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.value = '';
         });
