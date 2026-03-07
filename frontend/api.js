@@ -1452,7 +1452,7 @@ function selectService(planId,planName,price){
     const nameEl=document.getElementById('gatewayPlanName'); const priceEl=document.getElementById('gatewayPlanPrice');
     if(nameEl) nameEl.textContent=planName; if(priceEl) priceEl.textContent=`€${price}`;
     const payLink=document.getElementById('revolutPayLink');
-    if(payLink) payLink.href=`https://revolut.me/subrah2xwv?amount=${parseFloat(price).toFixed(2)}`;
+    if(payLink) payLink.href=`https://revolut.me/subrah2xwv?amount=${Math.round(parseFloat(price) * 100)}`;
     const refInput=document.getElementById('revolutTxRef'); if(refInput) refInput.value='';
     if(!_accessToken){ closeModal('paymentGatewayModal'); showToast('Please login first.','error'); showLogin(); return; }
     document.getElementById('paymentGatewayModal')?.classList.add('active');
