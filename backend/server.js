@@ -35,7 +35,7 @@ const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_ROUNDS) || 12;
 // ──────────────────────────────────────────────────────────────
 const db = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: true } : false,
+    ssl: false,
     max: 10,
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 5_000,
@@ -239,6 +239,7 @@ app.use(cors({
         if (/^https?:\/\/(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.)\d+\.\d+(:\d+)?$/.test(origin)) return cb(null, true);
         // Production allowed origins from env
         if (allowedOrigins.includes(origin)) return cb(null, true);
+        if (origin && origin.endsWith('.onrender.com')) return cb(null, true);
         if (process.env.NODE_ENV !== 'production') return cb(null, true);
         cb(new Error(`CORS: ${origin} not allowed`));
     },
@@ -406,7 +407,7 @@ app.post('/api/auth/register', authLimiter, async (req, res) => {
         const password_hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
         const { rows } = await db.query(
             `INSERT INTO users (full_name, email, password_hash, role, phone, is_verified)
-             VALUES ($1,$2,$3,$4,$5,FALSE) RETURNING id, email, full_name, role`,
+             VALUES ($1,$2,$3,$4,$5,TRUE) RETURNING id, email, full_name, role`,
             [full_name, email.toLowerCase().trim(), password_hash, role, phone || null]
         );
         const user = rows[0];
@@ -475,7 +476,7 @@ app.post('/api/auth/login', authLimiter, async (req, res) => {
         const user = rows[0];
         if (!user.is_active) return res.status(403).json({ error: 'Account deactivated. Contact support.' });
         // SECURITY FIX 2: Block unverified users from logging in
-        if (!user.is_verified) return res.status(403).json({ error: 'Please verify your email before logging in.', code: 'EMAIL_NOT_VERIFIED' });
+        // if (!user.is_verified) return res.status(403).json({ error: 'Please verify your email before logging in.', code: 'EMAIL_NOT_VERIFIED' });
 
         const valid = await bcrypt.compare(password, user.password_hash);
         if (!valid) {
