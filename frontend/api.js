@@ -206,11 +206,14 @@ async function handleRegister(e) {
         _pendingEmail = email;
         closeModal('registerModal');
 
-        const otpEmailEl = document.getElementById('otpEmailDisplay');
-        if (otpEmailEl) otpEmailEl.textContent = email;
-        const otpModal = document.getElementById('otpModal');
-        if (otpModal) otpModal.classList.add('active');
-        showToast('Account created! Check your email for OTP.', 'success');
+        // OTP DISABLED - future lo enable cheyyali
+        // const otpEmailEl = document.getElementById('otpEmailDisplay');
+        // if (otpEmailEl) otpEmailEl.textContent = email;
+        // const otpModal = document.getElementById('otpModal');
+        // if (otpModal) otpModal.classList.add('active');
+        showToast('Account created! Please login.', 'success');
+        closeModal('registerModal');
+        document.getElementById('loginModal')?.classList.add('active');
     } catch (err) {
         if (err.details) showToast(err.details.map(d => d.message).join(', '), 'error');
         else showToast(err.message || 'Registration failed.', 'error');
