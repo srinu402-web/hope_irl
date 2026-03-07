@@ -33,7 +33,6 @@ const API_BASE = (() => {
     const h = location.hostname;
     // 2. Local development (PC browser)
     if (!h || h === 'localhost' || h === '127.0.0.1') return 'http://localhost:3001/api';
-    if (h === 'hope-irl-frontend.onrender.com') return 'https://hope-irl.onrender.com/api';
     // 3. LAN / Mobile on same WiFi (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
     //    Live Server runs frontend on :5500, but Express backend runs on :3001
     //    Mobile needs to hit the PC IP on port 3001 directly
@@ -164,7 +163,18 @@ async function handleLogin(e) {
             setTimeout(connectSSE, 300);
         }, 300);
     } catch (err) {
-        showToast(err.message || 'Login failed.', 'error');
+        // SECURITY FIX: unverified email → open OTP modal to verify
+        if (err.status === 403 && err.message?.includes('verify your email')) {
+            _pendingEmail = email;
+            closeModal('loginModal');
+            const otpEmailEl = document.getElementById('otpEmailDisplay');
+            if (otpEmailEl) otpEmailEl.textContent = email;
+            document.getElementById('otpModal')?.classList.add('active');
+            showToast('Please verify your email first. Resending OTP...', 'warning');
+            apiCall('/auth/resend-otp', { method: 'POST', body: { email } }).catch(() => {});
+        } else {
+            showToast(err.message || 'Login failed.', 'error');
+        }
     } finally {
         if (btn) { btn.disabled = false; btn.textContent = 'Sign In'; }
     }
@@ -702,11 +712,11 @@ async function showAssignJobModal() {
 }
 
 function assignClient(profileId) {
-    showAssignJobModal();
-    setTimeout(() => {
+    // BUG FIX: wait for modal data load before setting value (setTimeout was unreliable)
+    showAssignJobModal().then(() => {
         const sel = document.getElementById('assignClientSelect');
         if (sel) sel.value = profileId;
-    }, 500);
+    });
 }
 
 async function confirmAssignment() {
