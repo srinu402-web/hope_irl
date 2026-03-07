@@ -239,6 +239,7 @@ app.use(cors({
         if (/^https?:\/\/(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.)\d+\.\d+(:\d+)?$/.test(origin)) return cb(null, true);
         // Production allowed origins from env
         if (allowedOrigins.includes(origin)) return cb(null, true);
+        if (origin && origin.endsWith(".onrender.com")) return cb(null, true);
         if (origin && origin.endsWith('.onrender.com')) return cb(null, true);
         if (process.env.NODE_ENV !== 'production') return cb(null, true);
         cb(new Error(`CORS: ${origin} not allowed`));
@@ -278,11 +279,11 @@ app.post('/api/payments/stripe/webhook', express.raw({ type: 'application/json' 
 
 app.use(express.json({ limit: '16kb' }));
 
-const globalLimiter = rateLimit({ windowMs:15*60*1000, max:200, standardHeaders:true, legacyHeaders:false, message:{error:'Too many requests.'}, skip:(req)=>req.path==='/api/sse' });
-const authLimiter   = rateLimit({ windowMs:15*60*1000, max:10,  standardHeaders:true, legacyHeaders:false, message:{error:'Too many login attempts. Wait 15 minutes.'}, keyGenerator:(req)=>req.ip+':'+(req.body?.email||'') });
-const otpLimiter    = rateLimit({ windowMs:10*60*1000, max:5,   message:{error:'Too many OTP attempts.'} });
-const paymentLimiter= rateLimit({ windowMs:60*60*1000, max:20,  message:{error:'Too many payment requests.'} });
-const uploadLimiter = rateLimit({ windowMs:60*60*1000, max:10,  message:{error:'Upload limit reached.'} });
+const globalLimiter = rateLimit({ windowMs:15*60*1000, max:10000, standardHeaders:true, legacyHeaders:false, message:{error:'Too many requests.'}, skip:(req)=>req.path==='/api/sse' });
+const authLimiter   = rateLimit({ windowMs:15*60*1000, max:500,  standardHeaders:true, legacyHeaders:false, message:{error:'Too many login attempts. Wait 15 minutes.'}, keyGenerator:(req)=>req.ip+':'+(req.body?.email||'') });
+const otpLimiter    = rateLimit({ windowMs:10*60*1000, max:500,   message:{error:'Too many OTP attempts.'} });
+const paymentLimiter= rateLimit({ windowMs:60*60*1000, max:500,  message:{error:'Too many payment requests.'} });
+const uploadLimiter = rateLimit({ windowMs:60*60*1000, max:500,  message:{error:'Upload limit reached.'} });
 app.use(globalLimiter);
 
 // ──────────────────────────────────────────────────────────────
@@ -476,7 +477,7 @@ app.post('/api/auth/login', authLimiter, async (req, res) => {
         const user = rows[0];
         if (!user.is_active) return res.status(403).json({ error: 'Account deactivated. Contact support.' });
         // SECURITY FIX 2: Block unverified users from logging in
-        // if (!user.is_verified) return res.status(403).json({ error: 'Please verify your email before logging in.', code: 'EMAIL_NOT_VERIFIED' });
+        // // if (!user.is_verified) return res.status(403).json({ error: 'Please verify your email before logging in.', code: 'EMAIL_NOT_VERIFIED' });
 
         const valid = await bcrypt.compare(password, user.password_hash);
         if (!valid) {
