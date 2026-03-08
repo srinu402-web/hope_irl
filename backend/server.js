@@ -27,6 +27,7 @@ const { z }          = require('zod');
 const path           = require('path');
 
 const app  = express();
+app.set('trust proxy', 1); // Fix for Render proxy
 const PORT = process.env.PORT || 3001;
 const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_ROUNDS) || 12;
 
