@@ -478,7 +478,7 @@ app.post('/api/auth/login', authLimiter, async (req, res) => {
         const user = rows[0];
         if (!user.is_active) return res.status(403).json({ error: 'Account deactivated. Contact support.' });
         // SECURITY FIX 2: Block unverified users from logging in
-        // // if (!user.is_verified) return res.status(403).json({ error: 'Please verify your email before logging in.', code: 'EMAIL_NOT_VERIFIED' });
+        // // // if (!user.is_verified) return res.status(403).json({ error: 'Please verify your email before logging in.', code: 'EMAIL_NOT_VERIFIED' });
 
         const valid = await bcrypt.compare(password, user.password_hash);
         if (!valid) {
@@ -747,7 +747,7 @@ app.post('/api/applications', requireAuth(['employee', 'admin']), async (req, re
 
     const { rows } = await db.query(
         `INSERT INTO job_applications (client_id, employee_id, company_name, job_title, job_url, location, portal, notes, salary_range, resume_link)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
         [client_id, employee_id, company_name, job_title, job_url || null, location || null, portal || null, notes || null, salary_range || null, resume_link || null]
     );
 
