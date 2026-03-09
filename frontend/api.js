@@ -1441,10 +1441,49 @@ async function deleteEmployee(id,name){
 }
 
 // Landing Services
-const FALLBACK_SERVICES=[
-    {id:'f1',name:'Basic',price_eur:99,applications_per_day:5,features:{list:['CV Review','ATS Check','Email Support']}},
-    {id:'f2',name:'Professional',price_eur:179,applications_per_day:10,features:{list:['CV Review','Cover Letter','ATS Check','WhatsApp Support']}},
-    {id:'f3',name:'Premium',price_eur:249,applications_per_day:15,features:{list:['CV Review','Cover Letter','ATS Check','Dedicated Support','LinkedIn Optimisation']}},
+const FALLBACK_SERVICES = [
+  {
+    id: 'f1',
+    name: 'Complete Job Application Support',
+    price_eur: 49,
+    billing: 'per_month',
+    applications_per_day: '10–15',
+    features: {
+      list: [
+        '10–15 targeted job applications submitted daily',
+        'Role-specific tailored resumes for each application',
+        'Strategic LinkedIn content (5 posts per week)',
+        '24/7 real-time support via WhatsApp',
+        'Daily application tracking and progress updates'
+      ]
+    }
+  },
+  {
+    id: 'f2',
+    name: 'Professional ATS-Optimised Resume',
+    price_eur: 29,
+    billing: 'one_time',
+    features: {
+      list: [
+        'Recruiter-ready ATS-compliant resume',
+        'Keyword optimisation for higher shortlist chances',
+        'Clean modern formatting aligned with EU hiring standards'
+      ]
+    }
+  },
+  {
+    id: 'f3',
+    name: 'LinkedIn Profile Optimisation',
+    price_eur: 19,
+    billing: 'one_time',
+    features: {
+      list: [
+        'Professional LinkedIn profile enhancement',
+        'Optimised headline, summary and experience',
+        'Improved recruiter visibility and reach'
+      ]
+    }
+  }
 ];
 function renderLandingServiceCards(services){
     return services.map((s,i)=>{
