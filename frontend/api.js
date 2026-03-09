@@ -1,3 +1,20 @@
+
+// ── JOB DETAILS MODAL ────────────────────────────────────────
+function showJobDetails(a) {
+    const modal = document.getElementById('jobDetailsModal');
+    if (!modal) return;
+    document.getElementById('jdCompany').textContent  = a.company_name || '-';
+    document.getElementById('jdTitle').textContent    = a.job_title || '-';
+    document.getElementById('jdLocation').textContent = a.location || '-';
+    document.getElementById('jdDate').textContent     = a.applied_at ? new Date(a.applied_at).toLocaleDateString('en-GB') : '-';
+    document.getElementById('jdStatus').innerHTML     = `<span class="status-badge status-${a.status}">${a.status ? a.status.charAt(0).toUpperCase() + a.status.slice(1) : '-'}</span>`;
+    const jobUrlEl = document.getElementById('jdJobUrl');
+    if (jobUrlEl) jobUrlEl.innerHTML = a.job_url ? `<a href="${a.job_url}" target="_blank" class="text-purple-600 hover:underline"><i class="fas fa-external-link-alt mr-1"></i>Open Job</a>` : '<span class="text-gray-400">-</span>';
+    const resumeEl = document.getElementById('jdResume');
+    if (resumeEl) resumeEl.innerHTML = a.resume_link ? `<a href="${a.resume_link}" target="_blank" class="text-purple-600 hover:underline"><i class="fas fa-file-alt mr-1"></i>View Resume</a>` : '<span class="text-gray-400">-</span>';
+    modal.classList.add('active');
+}
+
 // ============================================================
 // HOPE_IRL — api.js (All API + UI Logic)
 // BugFixes v1:
@@ -958,10 +975,12 @@ async function loadClientDashboard() {
                 <tr class="border-b hover:bg-gray-50">
                     <td class="p-4 font-semibold">${escHtml(a.company_name)}</td>
                     <td class="p-4">${escHtml(a.job_title)}</td>
-                    <td class="p-4">${escHtml(a.location || '-')}</td>
                     <td class="p-4">${new Date(a.applied_at).toLocaleDateString('en-GB')}</td>
                     <td class="p-4"><span class="status-badge status-${a.status}">${a.status.charAt(0).toUpperCase() + a.status.slice(1)}</span></td>
-                    <td class="p-4">${a.resume_link ? `<a href="${escHtml(a.resume_link)}" target="_blank" class="text-purple-600 hover:underline text-sm"><i class="fas fa-external-link-alt mr-1"></i>Resume</a>` : '<span class="text-gray-400 text-sm">-</span>'}</td>
+                    <td class="p-4">${a.job_url ? `<a href="${a.job_url}" target="_blank" class="text-purple-600 hover:underline text-sm"><i class="fas fa-external-link-alt mr-1"></i>Job URL</a>` : '<span class="text-gray-400 text-sm">-</span>'}</td>
+                    <td class="p-4">
+                        <button onclick="showJobDetails(${JSON.stringify(a).replace(/"/g, '&quot;')})" class="text-purple-600 hover:text-purple-800 text-sm font-semibold"><i class="fas fa-eye mr-1"></i>View Details</button>
+                    </td>
                 </tr>`).join('')
             : `<tr><td colspan="6" class="p-6 text-center text-gray-500">No applications yet. Your consultant will apply on your behalf.</td></tr>`;
         }
