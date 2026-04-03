@@ -529,7 +529,7 @@ const registerSchema = z.object({
     full_name: z.string().min(2).max(255),
     email: z.string().email(),
     password: z.string().min(8)
-        .regex(/[A-Z]/, 'Need 1 uppercase')
+        .regex(/[A-Z]/, 'Need 1 uppercase letter')
         .regex(/[0-9]/, 'Need 1 number')
         .regex(/[^A-Za-z0-9]/, 'Need 1 special character'),
     phone: z.string().optional(),
@@ -716,29 +716,203 @@ app.post('/api/auth/logout', async (req, res) => {
 });
 
 app.post('/api/auth/forgot-password', authLimiter, async (req, res) => {
+    // ── NEW FLOW: client submits request → admin gets notification (no email link) ──
     const email = sanitizeEmail(req.body.email);
-    if (!email) return res.json({ message: 'If email exists, reset link sent.' });
+    if (!email) return res.json({ message: 'Password reset request submitted. Admin will reset your password shortly.' });
 
-    const { rows } = await db.query('SELECT id, full_name FROM users WHERE email=$1', [email]);
-    if (!rows.length) return res.json({ message: 'If email exists, reset link sent.' });
+    const { rows } = await db.query('SELECT id, full_name, role FROM users WHERE email=$1 AND is_active=TRUE', [email]);
+    if (!rows.length) return res.json({ message: 'Password reset request submitted. Admin will reset your password shortly.' });
 
-    const token = crypto.randomBytes(32).toString('hex');
-    const hash = crypto.createHash('sha256').update(token).digest('hex');
-    const expires = new Date(Date.now() + 60 * 60 * 1000);
+    const user = rows[0];
 
-    await db.query(
-        'INSERT INTO password_resets (user_id, token_hash, expires_at) VALUES ($1,$2,$3)',
-        [rows[0].id, hash, expires]
-    );
+    // Only clients use this flow; employees use change-password themselves
+    if (user.role !== 'client') {
+        return res.status(400).json({ error: 'Employees should use the "Change Password" option in their profile settings.' });
+    }
 
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5500'}?reset_token=${token}`;
-    await sendEmail({
-        to: email,
-        subject: 'HOPE_IRL — Password Reset',
-        html: `<p>Hi ${rows[0].full_name},</p><p><a href="${resetUrl}">Click here</a> to reset your password. Expires in 1 hour.</p>`,
-    });
+    // Notify all active admins
+    const { rows: admins } = await db.query("SELECT id FROM users WHERE role='admin' AND is_active=TRUE");
+    for (const admin of admins) {
+        await db.query(
+            `INSERT INTO notifications (user_id, type, title, body, metadata)
+             VALUES ($1, 'password_reset_request', $2, $3, $4)`,
+            [
+                admin.id,
+                '🔑 Password Reset Request',
+                `${user.full_name} (${email}) has requested a password reset.`,
+                JSON.stringify({ requester_id: user.id, requester_name: user.full_name, requester_email: email }),
+            ]
+        );
+    }
 
-    return res.json({ message: 'If email exists, reset link sent.' });
+    await audit(null, 'client_forgot_password_request', { table: 'users', recordId: user.id });
+    return res.json({ message: 'Request sent to admin. They will reset your password and contact you shortly.' });
+});
+
+// ── ADMIN: Get pending password reset requests ────────────────
+app.get('/api/admin/password-reset-requests', requireAuth(['admin']), async (req, res) => {
+    try {
+        const { rows } = await db.query(
+            `SELECT n.id, n.body, n.is_read, n.created_at, n.metadata,
+                    (n.metadata->>'requester_id')::uuid AS requester_id,
+                    (n.metadata->>'requester_name') AS requester_name,
+                    (n.metadata->>'requester_email') AS requester_email
+             FROM notifications n
+             WHERE n.user_id=$1 AND n.type='password_reset_request'
+             ORDER BY n.created_at DESC LIMIT 50`,
+            [req.user.sub]
+        );
+        return res.json(rows);
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+// ── RESET PASSWORD (token from email link) ────────────────────
+app.post('/api/auth/reset-password', authLimiter, async (req, res) => {
+    const token    = sanitizeStr(req.body.token, 64);
+    const password = req.body.password;
+
+    if (!token || !password) {
+        return res.status(400).json({ error: 'Token and new password required.' });
+    }
+
+    if (password.length < 8) {
+        return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+    }
+
+    // Complexity checks
+    if (!/[A-Z]/.test(password)) return res.status(400).json({ error: 'Password needs at least 1 uppercase letter.' });
+    if (!/[0-9]/.test(password)) return res.status(400).json({ error: 'Password needs at least 1 number.' });
+    if (!/[^A-Za-z0-9]/.test(password)) return res.status(400).json({ error: 'Password needs at least 1 special character.' });
+
+    try {
+        const hash = crypto.createHash('sha256').update(token).digest('hex');
+        const { rows } = await db.query(
+            `SELECT pr.user_id, pr.expires_at, pr.used
+             FROM password_resets pr
+             WHERE pr.token_hash=$1`,
+            [hash]
+        );
+
+        if (!rows.length) return res.status(400).json({ error: 'Invalid or expired reset link.' });
+        if (rows[0].used)  return res.status(400).json({ error: 'Reset link already used. Request a new one.' });
+        if (new Date(rows[0].expires_at) < new Date()) {
+            return res.status(400).json({ error: 'Reset link has expired. Please request a new one.' });
+        }
+
+        const password_hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+
+        await db.query('UPDATE users SET password_hash=$1, updated_at=NOW() WHERE id=$2', [password_hash, rows[0].user_id]);
+        await db.query('UPDATE password_resets SET used=TRUE WHERE token_hash=$1', [hash]);
+        // Revoke all refresh tokens so old sessions are invalidated
+        await db.query('UPDATE refresh_tokens SET revoked=TRUE WHERE user_id=$1', [rows[0].user_id]);
+
+        await audit(rows[0].user_id, 'reset_password', { table: 'users', recordId: rows[0].user_id });
+        return res.json({ message: 'Password reset successfully! You can now log in.' });
+    } catch (err) {
+        return res.status(500).json({ error: 'Password reset failed. Please try again.' });
+    }
+});
+
+// ── ADMIN: Reset any user's password (direct — no email) ─────
+app.patch('/api/admin/users/:id/reset-password', requireAuth(['admin']), async (req, res) => {
+    const password = req.body.password;
+    if (!password || password.length < 8) {
+        return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+    }
+
+    try {
+        const { rows } = await db.query('SELECT id, full_name, email FROM users WHERE id=$1', [req.params.id]);
+        if (!rows.length) return res.status(404).json({ error: 'User not found.' });
+
+        const password_hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+        await db.query('UPDATE users SET password_hash=$1, updated_at=NOW() WHERE id=$2', [password_hash, req.params.id]);
+        // Revoke all active sessions for that user (force re-login with new password)
+        await db.query('UPDATE refresh_tokens SET revoked=TRUE WHERE user_id=$1', [req.params.id]);
+
+        // Mark any pending password_reset_request notifications as read for this user
+        await db.query(
+            `UPDATE notifications SET is_read=TRUE
+             WHERE type='password_reset_request'
+             AND (metadata->>'requester_id')=$1`,
+            [req.params.id]
+        );
+
+        await audit(req.user.sub, 'admin_reset_password', { table: 'users', recordId: req.params.id });
+        return res.json({ ok: true, message: `Password reset for ${rows[0].full_name}. No email sent — inform them directly via WhatsApp.` });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+// ── EMPLOYEE: Update own profile ──────────────────────────────
+app.patch('/api/employee/profile', requireAuth(['employee']), async (req, res) => {
+    const full_name  = req.body.full_name  ? sanitizeStr(req.body.full_name, 255)  : undefined;
+    const phone      = req.body.phone      ? sanitizeStr(req.body.phone, 30)       : undefined;
+    const department = req.body.department ? sanitizeStr(req.body.department, 100) : undefined;
+    const max_clients = req.body.max_clients ? sanitizeInt(req.body.max_clients, 1, 100) : undefined;
+
+    try {
+        const { rows } = await db.query(
+            `UPDATE users
+             SET full_name=COALESCE($1,full_name),
+                 phone=COALESCE($2,phone),
+                 updated_at=NOW()
+             WHERE id=$3
+             RETURNING id, full_name, email, phone`,
+            [full_name, phone, req.user.sub]
+        );
+        if (!rows.length) return res.status(404).json({ error: 'User not found.' });
+
+        if (department !== undefined || max_clients !== undefined) {
+            await db.query(
+                `UPDATE employee_profiles
+                 SET department=COALESCE($1,department),
+                     max_clients=COALESCE($2,max_clients),
+                     updated_at=NOW()
+                 WHERE user_id=$3`,
+                [department ?? null, max_clients ?? null, req.user.sub]
+            );
+        }
+
+        await audit(req.user.sub, 'employee_update_profile', { table: 'users', recordId: req.user.sub });
+        pushSSE(req.user.sub, 'profile_updated', { full_name: rows[0].full_name });
+        return res.json(rows[0]);
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+// ── EMPLOYEE: Change own password ─────────────────────────────
+app.patch('/api/employee/change-password', requireAuth(['employee', 'client', 'admin']), async (req, res) => {
+    const current_password = req.body.current_password;
+    const new_password     = req.body.new_password;
+
+    if (!current_password || !new_password) {
+        return res.status(400).json({ error: 'Both current and new password required.' });
+    }
+
+    if (new_password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+    if (!/[A-Z]/.test(new_password)) return res.status(400).json({ error: 'Password needs at least 1 uppercase letter.' });
+    if (!/[0-9]/.test(new_password)) return res.status(400).json({ error: 'Password needs at least 1 number.' });
+    if (!/[^A-Za-z0-9]/.test(new_password)) return res.status(400).json({ error: 'Password needs at least 1 special character.' });
+
+    try {
+        const { rows } = await db.query('SELECT password_hash FROM users WHERE id=$1', [req.user.sub]);
+        if (!rows.length) return res.status(404).json({ error: 'User not found.' });
+
+        const valid = await bcrypt.compare(current_password, rows[0].password_hash);
+        if (!valid) return res.status(400).json({ error: 'Current password is incorrect.' });
+
+        const hash = await bcrypt.hash(new_password, BCRYPT_ROUNDS);
+        await db.query('UPDATE users SET password_hash=$1, updated_at=NOW() WHERE id=$2', [hash, req.user.sub]);
+
+        await audit(req.user.sub, 'change_password', { table: 'users', recordId: req.user.sub });
+        return res.json({ message: 'Password changed successfully.' });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
 });
 
 // ──────────────────────────────────────────────────────────────

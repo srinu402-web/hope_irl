@@ -274,6 +274,257 @@ async function logout() {
     showToast('Logged out successfully.', 'info');
 }
 
+// ── FORGOT PASSWORD ───────────────────────────────────────────
+function showForgotPassword() {
+    closeModal('loginModal');
+    const modal = document.getElementById('forgotPasswordModal');
+    if (!modal) return showToast('Forgot password feature not available.', 'error');
+    const emailInput = document.getElementById('forgotEmail');
+    if (emailInput) emailInput.value = '';
+    const msg = document.getElementById('forgotPasswordMsg');
+    if (msg) { msg.textContent = ''; msg.className = ''; }
+    modal.classList.add('active');
+}
+
+async function submitForgotPassword() {
+    const email = document.getElementById('forgotEmail')?.value?.trim();
+    const msg   = document.getElementById('forgotPasswordMsg');
+    if (!email) return showToast('Please enter your email.', 'error');
+
+    const btn = document.querySelector('#forgotPasswordModal button[onclick="submitForgotPassword()"]');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Sending...'; }
+
+    try {
+        const data = await apiCall('/auth/forgot-password', { method: 'POST', body: { email } });
+        if (msg) {
+            msg.innerHTML = `
+                <div class="text-center p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                    <i class="fas fa-check-circle text-purple-600 text-2xl mb-2"></i>
+                    <p class="font-semibold text-purple-800">Request Sent to Admin! ✅</p>
+                    <p class="text-sm text-purple-600 mt-1">${data.message || 'Admin will reset your password and contact you via WhatsApp shortly.'}</p>
+                </div>`;
+            msg.className = 'mt-3';
+        }
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-check mr-2"></i>Request Sent'; }
+    } catch (err) {
+        if (msg) {
+            msg.textContent = err.message || 'Something went wrong. Try again.';
+            msg.className = 'text-red-600 text-sm font-semibold mt-3 text-center';
+        }
+        if (btn) { btn.disabled = false; btn.innerHTML = 'Send Request to Admin'; }
+    }
+}
+
+// ── RESET PASSWORD (from email link token) ────────────────────
+async function handleResetPasswordFlow() {
+    const params = new URLSearchParams(window.location.search);
+    const token  = params.get('reset_token');
+    if (!token) return;
+
+    // Remove token from URL so refresh doesn't re-trigger
+    history.replaceState({}, '', window.location.pathname);
+
+    const modal = document.getElementById('resetPasswordModal');
+    if (!modal) {
+        showToast('Password reset UI missing. Contact support.', 'error');
+        return;
+    }
+
+    // Store token for submit
+    const tokenField = document.getElementById('resetPasswordToken');
+    if (tokenField) tokenField.value = token;
+
+    // Clear fields
+    ['resetNewPassword', 'resetConfirmPassword'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    const msg = document.getElementById('resetPasswordMsg');
+    if (msg) { msg.textContent = ''; msg.className = ''; }
+
+    modal.classList.add('active');
+}
+
+async function submitResetPassword() {
+    const token    = document.getElementById('resetPasswordToken')?.value;
+    const password = document.getElementById('resetNewPassword')?.value;
+    const confirm  = document.getElementById('resetConfirmPassword')?.value;
+    const msg      = document.getElementById('resetPasswordMsg');
+
+    if (!password || !confirm) {
+        if (msg) { msg.textContent = 'Please fill both password fields.'; msg.className = 'text-red-600 text-sm font-semibold mt-2'; }
+        return;
+    }
+    if (password !== confirm) {
+        if (msg) { msg.textContent = 'Passwords do not match.'; msg.className = 'text-red-600 text-sm font-semibold mt-2'; }
+        return;
+    }
+
+    const btn = document.querySelector('#resetPasswordModal button[onclick="submitResetPassword()"]');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Resetting...'; }
+
+    try {
+        await apiCall('/auth/reset-password', { method: 'POST', body: { token, password } });
+        if (msg) {
+            msg.textContent = '✅ Password reset! You can now log in.';
+            msg.className = 'text-green-600 text-sm font-semibold mt-2 text-center';
+        }
+        if (btn) { btn.textContent = 'Done ✅'; }
+        setTimeout(() => {
+            closeModal('resetPasswordModal');
+            showLogin();
+        }, 2000);
+    } catch (err) {
+        if (msg) {
+            msg.textContent = err.message || 'Reset failed. The link may have expired.';
+            msg.className = 'text-red-600 text-sm font-semibold mt-2 text-center';
+        }
+        if (btn) { btn.disabled = false; btn.innerHTML = 'Set New Password'; }
+    }
+}
+
+// ── ADMIN: Reset user password ────────────────────────────────
+function showAdminResetPassword(userId, userName) {
+    const idEl = document.getElementById('adminResetUserId');
+    const nameEl = document.getElementById('adminResetUserName');
+    const pwEl = document.getElementById('adminResetNewPassword');
+    const msg = document.getElementById('adminResetPasswordMsg');
+    if (idEl) idEl.value = userId;
+    if (nameEl) nameEl.textContent = userName;
+    if (pwEl) pwEl.value = '';
+    if (msg) { msg.textContent = ''; msg.className = ''; }
+    document.getElementById('adminResetPasswordModal')?.classList.add('active');
+}
+
+async function submitAdminResetPassword() {
+    const userId   = document.getElementById('adminResetUserId')?.value;
+    const password = document.getElementById('adminResetNewPassword')?.value?.trim();
+    const msg      = document.getElementById('adminResetPasswordMsg');
+
+    if (!userId || !password) {
+        if (msg) { msg.textContent = 'User ID and new password are required.'; msg.className = 'text-red-600 text-sm font-semibold mt-2'; }
+        return;
+    }
+    if (password.length < 8) {
+        if (msg) { msg.textContent = 'Password must be at least 8 characters.'; msg.className = 'text-red-600 text-sm font-semibold mt-2'; }
+        return;
+    }
+
+    const btn = document.querySelector('#adminResetPasswordModal button[onclick="submitAdminResetPassword()"]');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Resetting...'; }
+
+    try {
+        const data = await apiCall(`/admin/users/${userId}/reset-password`, { method: 'PATCH', body: { password } });
+        if (msg) {
+            msg.textContent = '✅ ' + (data.message || 'Password reset successfully. Email sent to user.');
+            msg.className = 'text-green-600 text-sm font-semibold mt-2';
+        }
+        if (btn) { btn.textContent = 'Done ✅'; }
+        setTimeout(() => closeModal('adminResetPasswordModal'), 2000);
+    } catch (err) {
+        if (msg) { msg.textContent = err.message; msg.className = 'text-red-600 text-sm font-semibold mt-2'; }
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-key mr-2"></i>Reset Password'; }
+    }
+}
+
+// ── EMPLOYEE: Edit own profile ────────────────────────────────
+function showEmployeeProfileModal() {
+    if (!_currentUser) return;
+    const el = id => document.getElementById(id);
+    if (el('empProfileName'))  el('empProfileName').value  = _currentUser.name  || '';
+    if (el('empProfileEmail')) el('empProfileEmail').value = _currentUser.email || '';
+    if (el('empProfilePhone')) el('empProfilePhone').value = '';
+    if (el('empProfileDept'))  el('empProfileDept').value  = '';
+    // Pre-fill phone/dept from API if available
+    apiCall('/me').then(me => {
+        if (el('empProfilePhone')) el('empProfilePhone').value = me.phone || '';
+        if (el('empProfileDept'))  el('empProfileDept').value  = me.profile?.department || '';
+        if (el('empProfileMax'))   el('empProfileMax').value   = me.profile?.max_clients || 15;
+    }).catch(() => {});
+    // Clear password fields
+    ['empCurrentPassword','empNewPassword','empConfirmPassword'].forEach(id => {
+        const e = el(id); if (e) e.value = '';
+    });
+    const msg = el('empProfileMsg');
+    if (msg) { msg.textContent = ''; msg.className = ''; }
+    document.getElementById('employeeProfileModal')?.classList.add('active');
+}
+
+async function saveEmployeeProfile() {
+    const el  = id => document.getElementById(id);
+    const msg = el('empProfileMsg');
+    const body = {
+        full_name:   el('empProfileName')?.value?.trim()  || undefined,
+        phone:       el('empProfilePhone')?.value?.trim() || undefined,
+        department:  el('empProfileDept')?.value?.trim()  || undefined,
+        max_clients: parseInt(el('empProfileMax')?.value) || undefined,
+    };
+
+    const btn = document.querySelector('#employeeProfileModal button[onclick="saveEmployeeProfile()"]');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...'; }
+
+    try {
+        const updated = await apiCall('/employee/profile', { method: 'PATCH', body });
+        // Update in-memory user
+        if (_currentUser && updated.full_name) _currentUser.name = updated.full_name;
+        updateUserDisplay(_currentUser);
+        if (msg) { msg.textContent = '✅ Profile updated!'; msg.className = 'text-green-600 text-sm font-semibold mt-2'; }
+        showToast('Profile updated! ✅', 'success');
+        setTimeout(() => closeModal('employeeProfileModal'), 1500);
+    } catch (err) {
+        if (msg) { msg.textContent = err.message; msg.className = 'text-red-600 text-sm font-semibold mt-2'; }
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Save Profile'; }
+    }
+}
+
+async function saveEmployeePassword() {
+    const el  = id => document.getElementById(id);
+    const msg = el('empProfileMsg');
+    const current  = el('empCurrentPassword')?.value;
+    const newPass  = el('empNewPassword')?.value;
+    const confirm  = el('empConfirmPassword')?.value;
+
+    if (!current || !newPass || !confirm) {
+        if (msg) { msg.textContent = 'Fill all three password fields.'; msg.className = 'text-red-600 text-sm font-semibold mt-2'; }
+        return;
+    }
+    if (newPass.length < 8) {
+        if (msg) { msg.textContent = 'Password must be at least 8 characters.'; msg.className = 'text-red-600 text-sm font-semibold mt-2'; }
+        return;
+    }
+    if (!/[A-Z]/.test(newPass)) {
+        if (msg) { msg.textContent = 'Password needs at least 1 uppercase letter.'; msg.className = 'text-red-600 text-sm font-semibold mt-2'; }
+        return;
+    }
+    if (!/[0-9]/.test(newPass)) {
+        if (msg) { msg.textContent = 'Password needs at least 1 number.'; msg.className = 'text-red-600 text-sm font-semibold mt-2'; }
+        return;
+    }
+    if (!/[^A-Za-z0-9]/.test(newPass)) {
+        if (msg) { msg.textContent = 'Password needs at least 1 special character (!@#$...).'; msg.className = 'text-red-600 text-sm font-semibold mt-2'; }
+        return;
+    }
+    if (newPass !== confirm) {
+        if (msg) { msg.textContent = 'New passwords do not match.'; msg.className = 'text-red-600 text-sm font-semibold mt-2'; }
+        return;
+    }
+
+    const btn = document.querySelector('#employeeProfileModal button[onclick="saveEmployeePassword()"]');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Changing...'; }
+
+    try {
+        await apiCall('/employee/change-password', { method: 'PATCH', body: { current_password: current, new_password: newPass } });
+        if (msg) { msg.textContent = '✅ Password changed successfully!'; msg.className = 'text-green-600 text-sm font-semibold mt-2'; }
+        ['empCurrentPassword','empNewPassword','empConfirmPassword'].forEach(id => { const e = el(id); if (e) e.value = ''; });
+        showToast('Password changed! ✅', 'success');
+    } catch (err) {
+        if (msg) { msg.textContent = err.message; msg.className = 'text-red-600 text-sm font-semibold mt-2'; }
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Change Password'; }
+    }
+}
+
 // ── ADMIN STATS ───────────────────────────────────────────────
 async function loadAdminStats() {
     try {
@@ -317,6 +568,7 @@ async function loadAdminDashboard() {
         loadAdminEmployees(),
         loadAdminServices(),
         loadAdminPayments(),
+        loadAdminPasswordResetRequests(),
     ]);
 }
 
@@ -355,6 +607,10 @@ async function loadAdminClients() {
                         class="text-purple-600 hover:text-purple-800 p-1" title="Assign Employee">
                         <i class="fas fa-user-plus"></i>
                     </button>
+                    <button onclick="showAdminResetPassword('${c.id}','${escAttr(c.full_name)}')"
+                        class="text-orange-500 hover:text-orange-700 p-1" title="Reset Password">
+                        <i class="fas fa-key"></i>
+                    </button>
                 </td>
             </tr>`).join('')
         : `<tr><td colspan="7" class="p-6 text-center text-gray-500">No clients found</td></tr>`;
@@ -392,6 +648,10 @@ async function loadAdminEmployees() {
                             onclick="editEmployeeFromBtn(this)"
                             class="text-blue-600 hover:text-blue-800 p-1" title="Edit">
                             <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="showAdminResetPassword('${e.id}','${escAttr(e.full_name)}')"
+                            class="text-orange-500 hover:text-orange-700 p-1" title="Reset Password">
+                            <i class="fas fa-key"></i>
                         </button>
                         <button onclick="deleteEmployee('${e.id}','${escAttr(e.full_name)}')"
                             class="text-red-600 hover:text-red-800 p-1" title="Delete">
@@ -1188,7 +1448,199 @@ async function loadNotifications() {
         const unread = notifs.filter(n => !n.is_read).length;
         const badge  = document.getElementById('notifBadge');
         if (badge) badge.textContent = unread > 0 ? unread : '';
+
+        // ── Admin: populate password reset requests panel ──
+        if (_currentUser?.role === 'admin') {
+            await loadAdminPasswordResetRequests();
+        }
     } catch {}
+}
+
+// ── ADMIN: Password Reset Requests Panel ─────────────────────
+async function loadAdminPasswordResetRequests() {
+    const container = document.getElementById('adminPasswordResetRequests');
+    if (!container) return;
+    try {
+        const requests = await apiCall('/admin/password-reset-requests');
+        const pending  = requests.filter(r => !r.is_read);
+
+        // Update badge on Notifications sidebar item
+        const resetBadge = document.getElementById('adminResetReqBadge');
+        if (resetBadge) {
+            resetBadge.textContent = pending.length > 0 ? pending.length : '';
+            resetBadge.style.display = pending.length > 0 ? 'inline-flex' : 'none';
+        }
+
+        if (!requests.length) {
+            container.innerHTML = `
+                <div class="text-center text-gray-400 py-8">
+                    <i class="fas fa-check-circle text-3xl mb-2 text-green-400"></i>
+                    <p class="font-semibold">No password reset requests</p>
+                    <p class="text-sm">All clear! ✅</p>
+                </div>`;
+            return;
+        }
+
+        container.innerHTML = requests.map(r => `
+            <div class="flex items-start gap-4 p-4 rounded-xl border ${r.is_read ? 'bg-gray-50 border-gray-200 opacity-70' : 'bg-orange-50 border-orange-200'}">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${r.is_read ? 'bg-gray-200' : 'bg-orange-100'}">
+                    <i class="fas fa-key ${r.is_read ? 'text-gray-500' : 'text-orange-600'}"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="font-semibold text-sm">${escHtml(r.requester_name || 'Unknown')}</div>
+                    <div class="text-xs text-gray-500">${escHtml(r.requester_email || '')}</div>
+                    <div class="text-xs text-gray-400 mt-1">${new Date(r.created_at).toLocaleString('en-GB')}</div>
+                    ${r.is_read ? '<span class="text-xs text-green-600 font-semibold"><i class="fas fa-check mr-1"></i>Resolved</span>' : '<span class="text-xs text-orange-600 font-semibold"><i class="fas fa-clock mr-1"></i>Pending</span>'}
+                </div>
+                ${!r.is_read ? `
+                <button
+                    onclick="showAdminResetPassword('${escAttr(r.requester_id)}','${escAttr(r.requester_name || '')}')"
+                    class="flex-shrink-0 gradient-bg text-white text-xs font-semibold px-3 py-2 rounded-lg hover:opacity-90 transition">
+                    <i class="fas fa-key mr-1"></i>Reset Now
+                </button>` : ''}
+            </div>`).join('');
+    } catch (err) {
+        if (container) container.innerHTML = `<div class="text-red-500 text-sm p-4">Failed to load requests: ${escHtml(err.message)}</div>`;
+    }
+}
+
+// ── CLIENT: Download Today's Applications as PDF ──────────────
+async function downloadTodayApplicationsPDF() {
+    // Handle both button instances (dashboard overview + applications table)
+    const btn  = document.getElementById('downloadTodayPDFBtn');
+    const btn2 = document.getElementById('downloadTodayPDFBtn2');
+    const loadingHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Generating...';
+    const defaultHTML  = '<i class="fas fa-file-pdf mr-2"></i>Download Today\'s PDF';
+    const smallDefault = '<i class="fas fa-file-pdf"></i><span class="hidden sm:inline">Today\'s PDF</span>';
+    if (btn)  { btn.disabled  = true; btn.innerHTML  = loadingHTML; }
+    if (btn2) { btn2.disabled = true; btn2.innerHTML = loadingHTML; }
+
+    try {
+        const appData = await apiCall('/applications');
+        const apps    = appData.applications || [];
+        const today   = new Date().toISOString().split('T')[0];
+        const todayApps = apps.filter(a => a.applied_at?.startsWith(today));
+
+        const user    = _currentUser || {};
+        const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+
+        if (!todayApps.length) {
+            showToast("Today's applications లేవు — download చేయడానికి ఏమీ లేదు.", 'info');
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-file-pdf mr-2"></i>Download Today\'s PDF'; }
+            return;
+        }
+
+        const rows = todayApps.map((a, i) => `
+            <tr style="background:${i % 2 === 0 ? '#fff' : '#faf5ff'};">
+                <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;font-weight:600;">${i + 1}</td>
+                <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;font-weight:600;">${escHtml(a.company_name)}</td>
+                <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;">${escHtml(a.job_title)}</td>
+                <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;">${escHtml(a.location || '—')}</td>
+                <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;">${escHtml(a.portal || '—')}</td>
+                <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;">
+                    <span style="background:${
+                        a.status === 'offer' ? '#d1fae5' :
+                        a.status === 'interview' ? '#fef3c7' :
+                        a.status === 'rejected' ? '#fee2e2' : '#dbeafe'
+                    };color:${
+                        a.status === 'offer' ? '#065f46' :
+                        a.status === 'interview' ? '#92400e' :
+                        a.status === 'rejected' ? '#991b1b' : '#1e40af'
+                    };padding:3px 10px;border-radius:999px;font-weight:600;font-size:12px;">
+                        ${a.status ? a.status.charAt(0).toUpperCase() + a.status.slice(1) : 'Applied'}
+                    </span>
+                </td>
+                <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#6b7280;">
+                    ${a.job_url ? `<a href="${escHtml(a.job_url)}" style="color:#9333ea;">${escHtml(a.job_url.slice(0,35))}${a.job_url.length > 35 ? '…' : ''}</a>` : '—'}
+                </td>
+            </tr>`).join('');
+
+        const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HOPE_IRL — Today's Applications ${dateStr}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+  * { font-family: Inter, sans-serif; margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #fff; color: #111; padding: 32px; }
+  .header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 28px 32px; border-radius: 12px; margin-bottom: 28px; display: flex; justify-content: space-between; align-items: center; }
+  .header h1 { font-size: 24px; font-weight: 800; }
+  .header p  { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+  .meta { display: flex; gap: 24px; margin-bottom: 20px; }
+  .meta-card { background: #f3e8ff; border: 1px solid #d8b4fe; border-radius: 10px; padding: 14px 20px; flex: 1; text-align: center; }
+  .meta-card .num { font-size: 28px; font-weight: 800; color: #7e22ce; }
+  .meta-card .lbl { font-size: 12px; color: #6b7280; margin-top: 2px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead tr { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+  thead th { padding: 12px 14px; text-align: left; font-weight: 600; }
+  .footer { margin-top: 28px; text-align: center; font-size: 11px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 16px; }
+  @media print { body { padding: 16px; } }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>HOPE_IRL — Job Applications Report</h1>
+      <p>${escHtml(user.name || 'Client')} &nbsp;|&nbsp; ${dateStr}</p>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:36px;font-weight:800;">${todayApps.length}</div>
+      <div style="font-size:12px;opacity:0.85;">Applications Today</div>
+    </div>
+  </div>
+  <div class="meta">
+    <div class="meta-card">
+      <div class="num">${todayApps.filter(a => a.status === 'applied').length}</div>
+      <div class="lbl">Applied</div>
+    </div>
+    <div class="meta-card">
+      <div class="num">${todayApps.filter(a => a.status === 'interview').length}</div>
+      <div class="lbl">Interview</div>
+    </div>
+    <div class="meta-card">
+      <div class="num">${todayApps.filter(a => a.status === 'offer').length}</div>
+      <div class="lbl">Offer</div>
+    </div>
+    <div class="meta-card">
+      <div class="num">${todayApps.filter(a => a.status === 'rejected').length}</div>
+      <div class="lbl">Rejected</div>
+    </div>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Company</th>
+        <th>Job Title</th>
+        <th>Location</th>
+        <th>Portal</th>
+        <th>Status</th>
+        <th>Job URL</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div class="footer">
+    Generated by HOPE_IRL Platform &nbsp;|&nbsp; ${dateStr} &nbsp;|&nbsp; Confidential
+  </div>
+  <script>window.onload = () => { window.print(); }<\/script>
+</body>
+</html>`;
+
+        const blob = new Blob([html], { type: 'text/html' });
+        const a    = document.createElement('a');
+        a.href     = URL.createObjectURL(blob);
+        a.download = `HOPE_IRL_Applications_${today}.html`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        showToast(`${todayApps.length} applications PDF downloaded! ✅`, 'success');
+    } catch (err) {
+        showToast('Download failed: ' + err.message, 'error');
+    } finally {
+        if (btn)  { btn.disabled  = false; btn.innerHTML  = smallDefault; }
+        if (btn2) { btn2.disabled = false; btn2.innerHTML = defaultHTML; }
+    }
 }
 
 // ── AVATAR UPLOAD ─────────────────────────────────────────────
@@ -1737,6 +2189,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('loginForm')?.addEventListener('submit', handleLogin);
     loadLandingServices();
     document.getElementById('registerForm')?.addEventListener('submit', handleRegister);
+
+    // Handle reset_token in URL (from forgot password email link)
+    handleResetPasswordFlow();
 
     // Notification polling every 60s when logged in
     setInterval(() => { if (_accessToken) loadNotifications(); }, 60_000);

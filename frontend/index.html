@@ -237,6 +237,11 @@
                             <i class="fas fa-cog mr-3"></i>
                             <span>Services</span>
                         </a>
+                        <a onclick="showAdminSection('resetRequests', event)" class="sidebar-item flex items-center p-3 rounded-lg mb-2 cursor-pointer">
+                            <i class="fas fa-key mr-3"></i>
+                            <span class="flex-1">Reset Requests</span>
+                            <span id="adminResetReqBadge" style="display:none;" class="bg-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded-full ml-2">0</span>
+                        </a>
                         <a onclick="showClientSection('plans', event)" class="sidebar-item flex items-center p-3 rounded-lg mb-2 cursor-pointer">
                             <i class="fas fa-box-open mr-3"></i>
                             <span>Our Plans</span>
@@ -458,11 +463,28 @@
                             </div>
                         </div>
                     </div>
+                    <div id="adminResetRequestsSection" class="admin-section hidden p-6">
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <div class="flex justify-between items-center mb-6">
+                                <div>
+                                    <h2 class="text-2xl font-bold">Password Reset Requests</h2>
+                                    <p class="text-gray-500 text-sm mt-1">Clients who need their password reset — contact via WhatsApp after resetting</p>
+                                </div>
+                                <button onclick="loadAdminPasswordResetRequests()" class="text-purple-600 border border-purple-300 px-4 py-2 rounded-lg font-semibold text-sm hover:bg-purple-50 transition">
+                                    <i class="fas fa-sync-alt mr-2"></i>Refresh
+                                </button>
+                            </div>
+                            <div id="adminPasswordResetRequests" class="space-y-3">
+                                <div class="text-center text-gray-400 py-8">
+                                    <i class="fas fa-spinner fa-spin text-3xl mb-2"></i>
+                                    <p>Loading requests...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <!-- Employee Dashboard -->
         <div id="employeeDashboard" class="page hidden">
             <div class="flex min-h-screen bg-gray-100">
                 <div id="employeeSidebar" class="fixed md:relative w-64 bg-white shadow-lg h-full overflow-y-auto z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
@@ -488,6 +510,10 @@
                             <i class="fas fa-paper-plane mr-3"></i>
                             <span>Applications</span>
                         </a>
+                        <a onclick="showEmployeeProfileModal()" class="sidebar-item flex items-center p-3 rounded-lg mb-2 cursor-pointer">
+                            <i class="fas fa-user-edit mr-3"></i>
+                            <span>My Profile</span>
+                        </a>
                         <a onclick="logout()" class="sidebar-item flex items-center p-3 rounded-lg mb-2 cursor-pointer text-red-600">
                             <i class="fas fa-sign-out-alt mr-3"></i>
                             <span>Logout</span>
@@ -509,6 +535,12 @@
                                     <div class="font-semibold text-sm md:text-base user-name-display">-</div>
                                     <div class="text-xs md:text-sm text-gray-600 user-email-display"></div>
                                 </div>
+                                <button onclick="showEmployeeProfileModal()"
+                                    class="hidden md:flex items-center gap-1.5 text-xs text-purple-600 border border-purple-200 hover:bg-purple-50 px-3 py-1.5 rounded-lg font-semibold transition"
+                                    title="Edit Profile">
+                                    <i class="fas fa-user-edit"></i>
+                                    <span>Edit Profile</span>
+                                </button>
                                 <div class="relative w-8 h-8 md:w-10 md:h-10 cursor-pointer" onclick="showAvatarUploadModal()" title="Change profile picture">
                                     <img class="user-avatar-img hidden w-full h-full rounded-full object-cover" src="" alt="Avatar">
                                     <div class="user-initials-avatar w-full h-full bg-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm md:text-base user-initials">..</div>
@@ -699,7 +731,13 @@
                         <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
                             <div class="flex justify-between items-center mb-4">
                                 <h3 class="text-lg font-bold">Recent Applications</h3>
-                                <button onclick="showClientSection('applications', event)" class="text-sm text-purple-600 font-semibold hover:underline">View All →</button>
+                                <div class="flex items-center gap-3">
+                                    <button onclick="downloadTodayApplicationsPDF()" id="downloadTodayPDFBtn"
+                                        class="text-xs gradient-bg text-white px-3 py-1.5 rounded-lg font-semibold hover:opacity-90 transition flex items-center gap-1">
+                                        <i class="fas fa-file-pdf"></i><span class="hidden sm:inline">Today's PDF</span>
+                                    </button>
+                                    <button onclick="showClientSection('applications', event)" class="text-sm text-purple-600 font-semibold hover:underline">View All →</button>
+                                </div>
                             </div>
                             <div id="clientRecentApps" class="space-y-3">
                                 <div class="text-center text-gray-400 py-4"><i class="fas fa-spinner fa-spin mr-2"></i>Loading...</div>
@@ -723,7 +761,14 @@
 
                     <div id="clientApplicationsSection" class="client-section hidden p-6">
                         <div class="bg-white rounded-xl shadow-sm p-6">
-                            <h2 class="text-2xl font-bold mb-6">All Applications</h2>
+                            <div class="flex justify-between items-center mb-6">
+                                <h2 class="text-2xl font-bold">All Applications</h2>
+                                <button id="downloadTodayPDFBtn2" onclick="downloadTodayApplicationsPDF()"
+                                    class="gradient-bg text-white px-4 py-2 rounded-lg font-semibold text-sm hover:opacity-90 transition flex items-center gap-2">
+                                    <i class="fas fa-file-pdf"></i>
+                                    <span>Download Today's PDF</span>
+                                </button>
+                            </div>
                             <div class="overflow-x-auto">
                                 <table class="w-full">
                                     <thead>
@@ -901,6 +946,12 @@
                     <div class="mb-4">
                         <label class="block text-sm font-semibold mb-2">Password</label>
                         <input type="password" id="loginPassword" class="w-full border rounded-lg px-4 py-3" placeholder="Your password" required>
+                        <div class="text-right mt-1">
+                            <button type="button" onclick="showForgotPassword()"
+                                class="text-xs text-purple-600 hover:text-purple-800 font-semibold">
+                                Forgot Password?
+                            </button>
+                        </div>
                     </div>
                     <button type="submit" class="w-full gradient-bg text-white py-3 rounded-lg font-semibold">Sign In</button>
                     <div class="text-center mt-4">
@@ -1062,6 +1113,182 @@
                 <div class="text-center">
                     <button onclick="resendOTP()" class="text-purple-600 hover:text-purple-800 text-sm">Resend OTP</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- ══ FORGOT PASSWORD MODAL ══════════════════════════════ -->
+        <div id="forgotPasswordModal" class="modal">
+            <div class="bg-white rounded-xl p-6 md:p-8 max-w-md w-full mx-4 shadow-2xl">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold">Forgot Password?</h2>
+                        <p class="text-gray-500 text-sm mt-1">Admin will reset it for you directly</p>
+                    </div>
+                    <button onclick="closeModal('forgotPasswordModal')" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times text-xl"></i></button>
+                </div>
+                <div class="mb-4 p-4 bg-purple-50 border border-purple-200 rounded-xl text-sm text-purple-800">
+                    <i class="fas fa-info-circle mr-2 text-purple-500"></i>
+                    Enter your email and our admin will reset your password and contact you via <strong>WhatsApp</strong>.
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Your Registered Email</label>
+                    <input type="email" id="forgotEmail" placeholder="Enter your registered email"
+                        onkeydown="if(event.key==='Enter') submitForgotPassword()"
+                        class="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-purple-500">
+                </div>
+                <button onclick="submitForgotPassword()"
+                    class="w-full gradient-bg text-white py-3 rounded-lg font-semibold hover:opacity-90">
+                    <i class="fas fa-paper-plane mr-2"></i>Send Request to Admin
+                </button>
+                <div id="forgotPasswordMsg" class="mt-3"></div>
+                <div class="text-center mt-4">
+                    <button onclick="closeModal('forgotPasswordModal'); showLogin();"
+                        class="text-purple-600 hover:text-purple-800 text-sm font-semibold">
+                        <i class="fas fa-arrow-left mr-1"></i> Back to Login
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ RESET PASSWORD MODAL (from email link) ════════════ -->
+        <div id="resetPasswordModal" class="modal">
+            <div class="bg-white rounded-xl p-6 md:p-8 max-w-md w-full mx-4 shadow-2xl">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold">Set New Password</h2>
+                        <p class="text-gray-500 text-sm mt-1">Choose a strong password</p>
+                    </div>
+                    <button onclick="closeModal('resetPasswordModal')" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times text-xl"></i></button>
+                </div>
+                <input type="hidden" id="resetPasswordToken">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">New Password</label>
+                        <input type="password" id="resetNewPassword" placeholder="Min 8 chars, 1 uppercase, 1 number, 1 symbol"
+                            class="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-purple-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Confirm New Password</label>
+                        <input type="password" id="resetConfirmPassword" placeholder="Re-enter new password"
+                            onkeydown="if(event.key==='Enter') submitResetPassword()"
+                            class="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-purple-500">
+                    </div>
+                </div>
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4 text-sm text-blue-700">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    Password must be at least 8 characters with 1 uppercase, 1 number, and 1 special character.
+                </div>
+                <button onclick="submitResetPassword()"
+                    class="w-full gradient-bg text-white py-3 rounded-lg font-semibold hover:opacity-90 mt-4">
+                    Set New Password
+                </button>
+                <div id="resetPasswordMsg" class="mt-2"></div>
+            </div>
+        </div>
+
+        <!-- ══ ADMIN RESET USER PASSWORD MODAL ═══════════════════ -->
+        <div id="adminResetPasswordModal" class="modal">
+            <div class="bg-white rounded-xl p-6 md:p-8 max-w-md w-full mx-4 shadow-2xl">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold">Reset User Password</h2>
+                        <p class="text-sm text-gray-500 mt-1">User: <span id="adminResetUserName" class="font-semibold text-purple-700"></span></p>
+                    </div>
+                    <button onclick="closeModal('adminResetPasswordModal')" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times text-xl"></i></button>
+                </div>
+                <input type="hidden" id="adminResetUserId">
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4 text-sm text-yellow-800">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    The new password will be emailed to the user. They should change it after logging in.
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">New Temporary Password</label>
+                    <input type="text" id="adminResetNewPassword" placeholder="Enter new password (min 8 chars)"
+                        onkeydown="if(event.key==='Enter') submitAdminResetPassword()"
+                        class="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-purple-500">
+                </div>
+                <button onclick="submitAdminResetPassword()"
+                    class="w-full gradient-bg text-white py-3 rounded-lg font-semibold hover:opacity-90">
+                    <i class="fas fa-key mr-2"></i>Reset Password & Notify User
+                </button>
+                <div id="adminResetPasswordMsg" class="mt-2"></div>
+            </div>
+        </div>
+
+        <!-- ══ EMPLOYEE PROFILE & CHANGE PASSWORD MODAL ══════════ -->
+        <div id="employeeProfileModal" class="modal">
+            <div class="bg-white rounded-xl p-6 md:p-8 max-w-lg w-full mx-4 my-4 overflow-y-auto max-h-[90vh] shadow-2xl">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold">My Profile</h2>
+                        <p class="text-gray-500 text-sm mt-1">Update your details and password</p>
+                    </div>
+                    <button onclick="closeModal('employeeProfileModal')" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times text-xl"></i></button>
+                </div>
+
+                <!-- Profile Info -->
+                <div class="bg-purple-50 rounded-xl p-4 mb-6">
+                    <h3 class="font-bold text-gray-800 mb-4"><i class="fas fa-user mr-2 text-purple-600"></i>Profile Information</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Full Name</label>
+                            <input type="text" id="empProfileName" placeholder="Your full name"
+                                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:border-purple-500 bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Email <span class="text-gray-400 font-normal">(read-only)</span></label>
+                            <input type="email" id="empProfileEmail" readonly
+                                class="w-full border border-gray-100 rounded-lg px-4 py-2.5 bg-gray-50 text-gray-500 cursor-not-allowed">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Phone</label>
+                            <input type="text" id="empProfilePhone" placeholder="+353 XX XXX XXXX"
+                                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:border-purple-500 bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Department</label>
+                            <input type="text" id="empProfileDept" placeholder="e.g. Career Consulting"
+                                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:border-purple-500 bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Max Clients</label>
+                            <input type="number" id="empProfileMax" min="1" max="100"
+                                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:border-purple-500 bg-white">
+                        </div>
+                    </div>
+                    <button onclick="saveEmployeeProfile()"
+                        class="w-full gradient-bg text-white py-2.5 rounded-lg font-semibold hover:opacity-90 mt-4">
+                        Save Profile
+                    </button>
+                </div>
+
+                <!-- Change Password -->
+                <div class="bg-gray-50 rounded-xl p-4">
+                    <h3 class="font-bold text-gray-800 mb-4"><i class="fas fa-lock mr-2 text-gray-600"></i>Change Password</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Current Password</label>
+                            <input type="password" id="empCurrentPassword" placeholder="Enter current password"
+                                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:border-purple-500 bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">New Password</label>
+                            <input type="password" id="empNewPassword" placeholder="Min 8 chars, 1 uppercase, 1 number, 1 symbol"
+                                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:border-purple-500 bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Confirm New Password</label>
+                            <input type="password" id="empConfirmPassword" placeholder="Re-enter new password"
+                                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:border-purple-500 bg-white">
+                        </div>
+                    </div>
+                    <button onclick="saveEmployeePassword()"
+                        class="w-full bg-gray-700 hover:bg-gray-800 text-white py-2.5 rounded-lg font-semibold mt-4">
+                        Change Password
+                    </button>
+                </div>
+
+                <div id="empProfileMsg" class="mt-3 text-center text-sm font-semibold"></div>
             </div>
         </div>
 
