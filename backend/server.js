@@ -1208,6 +1208,7 @@ app.get('/api/admin/stats', requireAuth(['admin']), async (req, res) => {
         conversionData,
         pendingPayments,
         expiringThisWeek,
+        monthlyApplications,
     ] = await Promise.all([
         db.query("SELECT COUNT(*) FROM users WHERE role='client' AND is_active=TRUE"),
         db.query("SELECT COUNT(*) FROM users WHERE role='employee' AND is_active=TRUE"),
@@ -1238,6 +1239,12 @@ app.get('/api/admin/stats', requireAuth(['admin']), async (req, res) => {
                   WHERE s.status='active'
                     AND s.ends_at BETWEEN NOW() AND NOW()+INTERVAL '7 days'
                   ORDER BY s.ends_at ASC`),
+        db.query(`SELECT TO_CHAR(DATE_TRUNC('month',applied_at),'Mon') AS month,
+                         COUNT(*) AS count
+                  FROM job_applications
+                  WHERE applied_at >= NOW()-INTERVAL '6 months'
+                  GROUP BY DATE_TRUNC('month',applied_at)
+                  ORDER BY DATE_TRUNC('month',applied_at) ASC`),
     ]);
 
     return res.json({
@@ -1250,6 +1257,7 @@ app.get('/api/admin/stats', requireAuth(['admin']), async (req, res) => {
         conversionData: conversionData.rows[0],
         pendingPaymentsCount: parseInt(pendingPayments.rows[0].count, 10),
         expiringThisWeek: expiringThisWeek.rows,
+        monthlyApplications: monthlyApplications.rows,
     });
 });
 

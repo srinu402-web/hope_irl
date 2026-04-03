@@ -1525,7 +1525,7 @@ async function downloadTodayApplicationsPDF() {
         const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
 
         if (!todayApps.length) {
-            showToast("Today's applications లేవు — download చేయడానికి ఏమీ లేదు.", 'info');
+            showToast("No applications found for today — nothing to download.", 'info');
             if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-file-pdf mr-2"></i>Download Today\'s PDF'; }
             return;
         }
@@ -2174,6 +2174,24 @@ async function loadAdminAnalytics(stats){
     if(stats.pendingPaymentsCount>0){
         const badge=document.getElementById('pendingPaymentsBadge');
         if(badge){badge.textContent=stats.pendingPaymentsCount;badge.style.display='inline-flex';}
+    }
+
+    // Application Analytics chart
+    const appChartContainer = document.querySelector('#adminOverviewSection .flex.items-end.space-x-4.h-64');
+    if(appChartContainer && stats.monthlyApplications?.length){
+        const appData = stats.monthlyApplications;
+        const maxCount = Math.max(...appData.map(d=>parseInt(d.count)), 1);
+        const colors = ['bg-purple-200','bg-purple-300','bg-purple-400','bg-purple-500','bg-purple-600','bg-purple-700'];
+        appChartContainer.innerHTML = appData.map((d,i)=>`
+            <div class="flex-1 flex flex-col items-center">
+                <span class="text-xs text-gray-500 font-semibold mb-1">${d.count}</span>
+                <div class="w-full ${colors[i % colors.length]} rounded-t chart-bar transition-all duration-500"
+                     style="height:${Math.max(4, Math.round((parseInt(d.count)/maxCount)*220))}px"></div>
+                <div class="text-sm mt-2 text-gray-600">${d.month}</div>
+            </div>`).join('');
+    } else if(appChartContainer && !stats.monthlyApplications?.length){
+        appChartContainer.innerHTML = `<div class="w-full flex items-center justify-center text-gray-400 text-sm">
+            <i class="fas fa-chart-bar mr-2 text-2xl text-purple-200"></i> No application data yet</div>`;
     }
 }
 
