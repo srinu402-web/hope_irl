@@ -252,17 +252,17 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 });
 
 // ── Init ──────────────────────────────────────────────────────
-// FIX: async గా చేశాము — restoreSession() wait చేయడానికి
+
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('HOPE_IRL Platform Loaded ✅');
 
-    // ── SESSION RESTORE: refresh చేసినా dashboard remain అవుతుంది ──
+    
     if (typeof restoreSession === 'function') {
         const restored = await restoreSession();
         if (restored) return; // dashboard already shown by api.js
     }
 
-    // Session లేదు — landing page show చేయి
+    
     document.getElementById('landingPage')?.classList.remove('hidden');
 
     // Animate stat cards
