@@ -1235,6 +1235,7 @@ async function loadClientDashboard() {
                 <tr class="border-b hover:bg-gray-50">
                     <td class="p-4 font-semibold">${escHtml(a.company_name)}</td>
                     <td class="p-4">${escHtml(a.job_title)}</td>
+                    <td class="p-4">${escHtml(a.location || '-')}</td>
                     <td class="p-4">${new Date(a.applied_at).toLocaleDateString('en-GB')}</td>
                     <td class="p-4"><span class="status-badge status-${a.status}">${a.status.charAt(0).toUpperCase() + a.status.slice(1)}</span></td>
                     <td class="p-4">${a.job_url ? `<a href="${a.job_url}" target="_blank" class="text-purple-600 hover:underline text-sm"><i class="fas fa-external-link-alt mr-1"></i>Job URL</a>` : '<span class="text-gray-400 text-sm">-</span>'}</td>
@@ -1242,7 +1243,7 @@ async function loadClientDashboard() {
                         <button onclick="showJobDetails(${JSON.stringify(a).replace(/"/g, '&quot;')})" class="text-purple-600 hover:text-purple-800 text-sm font-semibold"><i class="fas fa-eye mr-1"></i>View Details</button>
                     </td>
                 </tr>`).join('')
-            : `<tr><td colspan="6" class="p-6 text-center text-gray-500">No applications yet. Your consultant will apply on your behalf.</td></tr>`;
+            : `<tr><td colspan="7" class="p-6 text-center text-gray-500">No applications yet. Your consultant will apply on your behalf.</td></tr>`;
         }
 
         // ── Refresh subscription badge (clientSubBadge, clientSubStatus, clientAppsLimit)
