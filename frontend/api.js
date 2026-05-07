@@ -974,7 +974,17 @@ async function adminUpdatePayment(id, status) {
     } catch (err) { showToast(err.message, 'error'); }
 }
 
-// ── ASSIGN CLIENT ─────────────────────────────────────────────
+// ── DOCUMENT VIEWER ───────────────────────────────────────────
+// BUG FIX: Direct S3 URLs are private — opening them shows raw XML/bytes ("code").
+// Route all document opens through the backend presign endpoint instead.
+function openDocument(url) {
+    if (!url) return showToast('No document available.', 'error');
+    if (url.startsWith('local://')) {
+        return showToast('This file was stored locally. Please ask the client to re-upload their CV.', 'error');
+    }
+    const presignUrl = `${API_BASE}/documents/download?url=${encodeURIComponent(url)}`;
+    window.open(presignUrl, '_blank', 'noopener');
+}
 async function showAssignJobModal() {
     document.getElementById('assignJobModal')?.classList.add('active');
     try {
@@ -1177,7 +1187,7 @@ async function loadEmployeeClients(prefetchedClients = null) {
                         ${todayApps >= limit ? 'disabled title="Daily limit reached"' : ''}>
                         <i class="fas fa-plus mr-1"></i>Apply Jobs
                     </button>
-                    ${c.cv_url ? `<a href="${c.cv_url}" target="_blank" class="text-purple-600 border border-purple-300 py-2 px-3 rounded-lg text-sm flex items-center" title="View CV"><i class="fas fa-file-pdf"></i></a>` : ''}
+                    ${c.cv_url ? `<a href="#" onclick="openDocument('${escAttr(c.cv_url)}'); return false;" class="text-purple-600 border border-purple-300 py-2 px-3 rounded-lg text-sm flex items-center" title="View CV"><i class="fas fa-file-pdf"></i></a>` : ''}
                 </div>
             </div>`;
         }).join('')

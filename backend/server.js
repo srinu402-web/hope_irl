@@ -1064,6 +1064,58 @@ app.delete('/api/documents/:id', requireAuth(), async (req, res) => {
     return res.status(204).send();
 });
 
+// ── DOCUMENT PRESIGNED DOWNLOAD ───────────────────────────────
+// BUG FIX: S3 bucket is private — direct cv_url links return XML error (looks like "code").
+// This endpoint generates a 15-minute presigned URL and redirects the browser to it,
+// so private S3 files open correctly as PDFs in a new tab.
+app.get('/api/documents/download', requireAuth(), async (req, res) => {
+    const rawUrl = sanitizeStr(req.query.url, 2048);
+    if (!rawUrl) return res.status(400).json({ error: 'url query param required' });
+
+    // local:// fallback — file was never uploaded to S3 (S3 not configured at upload time)
+    if (rawUrl.startsWith('local://')) {
+        return res.status(404).json({ error: 'File is stored locally on the server and cannot be previewed. Please re-upload your CV.' });
+    }
+
+    try {
+        const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
+        const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+
+        const bucket = process.env.AWS_S3_BUCKET || 'hope-irl-documents';
+        const region = process.env.AWS_REGION    || 'ap-south-1';
+
+        // Extract S3 object key from the stored URL
+        // Stored format: https://<bucket>.s3.<region>.amazonaws.com/<key>
+        const s3Prefix = `https://${bucket}.s3.${region}.amazonaws.com/`;
+        if (!rawUrl.startsWith(s3Prefix)) {
+            return res.status(400).json({ error: 'Unrecognised storage URL format.' });
+        }
+        const key = rawUrl.slice(s3Prefix.length);
+
+        const s3 = new S3Client({
+            region,
+            credentials: {
+                accessKeyId:     process.env.AWS_ACCESS_KEY_ID,
+                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+            },
+        });
+
+        const command = new GetObjectCommand({
+            Bucket: bucket,
+            Key:    key,
+            // Tells browser to display inline (PDF viewer) instead of force-downloading
+            ResponseContentDisposition: 'inline',
+            ResponseContentType:        'application/pdf',
+        });
+
+        const signedUrl = await getSignedUrl(s3, command, { expiresIn: 900 }); // 15 minutes
+        return res.redirect(302, signedUrl);
+    } catch (err) {
+        console.error('Presign error:', err.message);
+        return res.status(500).json({ error: 'Could not generate download link. Check S3 configuration.' });
+    }
+});
+
 // ──────────────────────────────────────────────────────────────
 // 12. JOB APPLICATIONS
 // ──────────────────────────────────────────────────────────────
@@ -1457,6 +1509,15 @@ app.post('/api/admin/assign', requireAuth(['admin']), async (req, res) => {
     await db.query(
         'UPDATE client_assignments SET is_active=FALSE, unassigned_at=NOW() WHERE client_id=$1 AND is_active=TRUE',
         [client_profile_id]
+    );
+
+    // BUG FIX: UNIQUE(client_id, employee_id, is_active) constraint violation on re-assignment.
+    // If client was previously assigned to the same employee, an is_active=FALSE row already exists.
+    // Inserting a new row would try to create a second (client, employee, FALSE) after deactivation,
+    // crashing with a unique constraint error. Delete the stale inactive row first.
+    await db.query(
+        'DELETE FROM client_assignments WHERE client_id=$1 AND employee_id=$2 AND is_active=FALSE',
+        [client_profile_id, employee_profile_id]
     );
 
     const { rows } = await db.query(
