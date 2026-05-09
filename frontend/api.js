@@ -1259,18 +1259,38 @@ function openDocument(url) {
 }
 async function showAssignJobModal() {
     document.getElementById('assignJobModal')?.classList.add('active');
+
+    // Reset dropdowns to a clear loading state every time the modal opens,
+    // so stale options from a previous open don't linger if the new fetch fails.
+    const cSel = document.getElementById('assignClientSelect');
+    const eSel = document.getElementById('assignEmployeeSelect');
+    if (cSel) cSel.innerHTML = '<option value="">Loading clients...</option>';
+    if (eSel) eSel.innerHTML = '<option value="">Loading employees...</option>';
+
+    // BUG FIX: Previously these had `} catch {}` (silent). When /admin/clients
+    // or /admin/employees failed (network error → "Failed to fetch", 401, 500,
+    // CORS, etc.) the dropdowns stayed stuck on "Loading...", the user picked
+    // nothing, and confirmAssignment() showed a misleading "Select both client
+    // and employee" instead of the real reason. Now we surface the error.
     try {
         const clients = await apiCall('/admin/clients');
-        const sel = document.getElementById('assignClientSelect');
-        if (sel) sel.innerHTML = '<option value="">-- Select Client --</option>' +
+        if (cSel) cSel.innerHTML = '<option value="">-- Select Client --</option>' +
             clients.map(c => `<option value="${c.profile_id}">${escHtml(c.full_name)} (${escHtml(c.email)})</option>`).join('');
-    } catch {}
+    } catch (err) {
+        console.error('Load clients failed:', err);
+        if (cSel) cSel.innerHTML = '<option value="">⚠️ Failed to load clients</option>';
+        showToast('Could not load clients: ' + (err.message || 'Network error'), 'error');
+    }
+
     try {
         const emps = await apiCall('/admin/employees');
-        const sel = document.getElementById('assignEmployeeSelect');
-        if (sel) sel.innerHTML = '<option value="">-- Select Employee --</option>' +
+        if (eSel) eSel.innerHTML = '<option value="">-- Select Employee --</option>' +
             emps.map(e => `<option value="${e.profile_id}">${escHtml(e.full_name)} (${e.assigned_clients}/${e.max_clients} clients)</option>`).join('');
-    } catch {}
+    } catch (err) {
+        console.error('Load employees failed:', err);
+        if (eSel) eSel.innerHTML = '<option value="">⚠️ Failed to load employees</option>';
+        showToast('Could not load employees: ' + (err.message || 'Network error'), 'error');
+    }
 }
 
 function assignClient(profileId) {
@@ -1294,11 +1314,21 @@ async function unassignClient(profileId, clientName, employeeName) {
 }
 
 async function confirmAssignment() {
-    const clientId   = document.getElementById('assignClientSelect')?.value;
-    const employeeId = document.getElementById('assignEmployeeSelect')?.value;
+    const clientSel   = document.getElementById('assignClientSelect');
+    const employeeSel = document.getElementById('assignEmployeeSelect');
+    const clientId    = clientSel?.value;
+    const employeeId  = employeeSel?.value;
 
     // 🔍 DEBUG: Verify IDs before sending — check console to confirm profile IDs not user IDs
     console.log('🔍 Assignment debug → client_profile_id:', clientId, '| employee_profile_id:', employeeId);
+
+    // Detect the case where the dropdowns failed to load (showAssignJobModal
+    // catch path) and give a clearer message than "Select both...".
+    const clientLoadFailed   = !clientSel   || clientSel.options.length <= 1;
+    const employeeLoadFailed = !employeeSel || employeeSel.options.length <= 1;
+    if (clientLoadFailed || employeeLoadFailed) {
+        return showToast('Client/Employee list did not load. Close & reopen, or check your network/login.', 'error');
+    }
 
     if (!clientId || !employeeId) return showToast('Select both client and employee.', 'error');
 
@@ -1312,7 +1342,8 @@ async function confirmAssignment() {
         loadAdminClients();
         loadAdminEmployees();
     } catch (err) {
-        showToast(err.message, 'error');
+        // Show backend error verbatim — e.g. "Employee has reached their maximum client capacity"
+        showToast('Assign failed: ' + (err.message || 'Unknown error'), 'error');
     } finally {
         if (btn) { btn.disabled = false; btn.textContent = 'Assign Client'; }
     }
@@ -1407,7 +1438,8 @@ async function loadEmployeeDashboard() {
                             <option value="rejected" ${a.status==='rejected'?'selected':''}>Rejected</option>
                             <option value="withdrawn" ${a.status==='withdrawn'?'selected':''}>Withdrawn</option>
                         </select>
-                        <button onclick="deleteApplication('${a.id}')" class="p-1.5 text-red-500 hover:bg-red-50 rounded-lg"><i class="fas fa-trash text-sm"></i></button>
+                        <button onclick='editApplication(${JSON.stringify(a).replace(/'/g, "&#39;")})' class="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg" title="Edit"><i class="fas fa-edit text-sm"></i></button>
+                        <button onclick="deleteApplication('${a.id}')" class="p-1.5 text-red-500 hover:bg-red-50 rounded-lg" title="Delete"><i class="fas fa-trash text-sm"></i></button>
                     </div>
                 </div>`).join('')}</div></div>`;
         }).join(''); } }
@@ -1605,6 +1637,57 @@ async function deleteApplication(id) {
         else loadEmployeeDashboard();
         showToast('Application deleted ✅', 'success');
     } catch (err) { showToast(err.message, 'error'); }
+}
+
+// ── EDIT APPLICATION (Employee/Admin) ─────────────────────────
+// Opens the edit modal pre-filled with the application's current values.
+// `a` is the full application object from the daywise list (has id, company_name, etc.)
+function editApplication(a) {
+    if (!a || !a.id) return showToast('Invalid application', 'error');
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v ?? ''; };
+    set('editJobAppId',       a.id);
+    set('editJobClientName',  a.client_name || '-');
+    set('editJobCompany',     a.company_name);
+    set('editJobTitle',       a.job_title);
+    set('editJobUrl',         a.job_url);
+    set('editJobLocation',    a.location);
+    set('editJobPortal',      a.portal);
+    set('editJobSalary',      a.salary_range);
+    set('editJobNotes',       a.notes);
+    document.getElementById('editJobModal')?.classList.add('active');
+}
+
+async function submitEditApplication() {
+    const id = document.getElementById('editJobAppId')?.value;
+    if (!id) return showToast('No application selected', 'error');
+
+    const company = document.getElementById('editJobCompany')?.value?.trim();
+    const title   = document.getElementById('editJobTitle')?.value?.trim();
+    if (!company || !title) return showToast('Company and Job Title are required.', 'error');
+
+    const body = {
+        company_name: company,
+        job_title:    title,
+        job_url:      document.getElementById('editJobUrl')?.value?.trim() || null,
+        location:     document.getElementById('editJobLocation')?.value?.trim() || null,
+        portal:       document.getElementById('editJobPortal')?.value?.trim() || null,
+        salary_range: document.getElementById('editJobSalary')?.value?.trim() || null,
+        notes:        document.getElementById('editJobNotes')?.value?.trim() || null,
+    };
+
+    const btn = document.querySelector('#editJobModal button[onclick="submitEditApplication()"]');
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+
+    try {
+        await apiCall(`/applications/${id}`, { method: 'PATCH', body });
+        showToast('Application updated ✅', 'success');
+        closeModal('editJobModal');
+        loadEmployeeDashboard();
+    } catch (err) {
+        showToast('Update failed: ' + err.message, 'error');
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Save Changes'; }
+    }
 }
 
 // ── CV UPLOAD ─────────────────────────────────────────────────
