@@ -233,6 +233,10 @@
                             <span class="flex-1">Payments</span>
                             <span id="pendingPaymentsBadge" style="display:none;" class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full ml-2">!</span>
                         </a>
+                        <a onclick="showAdminSection('dailyReport', event); loadAdminDailyReport();" class="sidebar-item flex items-center p-3 rounded-lg mb-2 cursor-pointer">
+                            <i class="fas fa-calendar-day mr-3"></i>
+                            <span>Daily Report</span>
+                        </a>
                         <a onclick="showAdminSection('services', event)" class="sidebar-item flex items-center p-3 rounded-lg mb-2 cursor-pointer">
                             <i class="fas fa-cog mr-3"></i>
                             <span>Services</span>
@@ -479,6 +483,131 @@
                                     <i class="fas fa-spinner fa-spin text-3xl mb-2"></i>
                                     <p>Loading requests...</p>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ============================================================ -->
+                    <!-- Daily Applications Report — "A roju enni applications, evariki" -->
+                    <!-- ============================================================ -->
+                    <div id="adminDailyReportSection" class="admin-section hidden p-4 md:p-6">
+                        <!-- Header + filters -->
+                        <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 mb-6">
+                            <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-3">
+                                <div>
+                                    <h2 class="text-xl md:text-2xl font-bold flex items-center gap-2">
+                                        <i class="fas fa-calendar-day text-purple-600"></i>
+                                        Daily Applications Report
+                                    </h2>
+                                    <p class="text-gray-500 text-sm mt-1">A roju enni applications, e client/employee — date-wise breakdown</p>
+                                </div>
+                                <button onclick="loadAdminDailyReport()" class="text-purple-600 border border-purple-300 px-4 py-2 rounded-lg font-semibold text-sm hover:bg-purple-50 transition">
+                                    <i class="fas fa-sync-alt mr-2"></i>Refresh
+                                </button>
+                            </div>
+
+                            <!-- Filter row -->
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 items-end">
+                                <div>
+                                    <label class="text-xs font-semibold text-gray-600 block mb-1">From</label>
+                                    <input type="date" id="dailyReportFrom" class="w-full text-sm">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-semibold text-gray-600 block mb-1">To</label>
+                                    <input type="date" id="dailyReportTo" class="w-full text-sm">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-semibold text-gray-600 block mb-1">Group By</label>
+                                    <select id="dailyReportGroupBy" class="w-full text-sm">
+                                        <option value="both">Client + Employee</option>
+                                        <option value="client">Client only</option>
+                                        <option value="employee">Employee only</option>
+                                    </select>
+                                </div>
+                                <button onclick="loadAdminDailyReport()" class="gradient-bg text-white px-4 py-2 rounded-lg font-semibold text-sm">
+                                    <i class="fas fa-filter mr-2"></i>Apply
+                                </button>
+                            </div>
+
+                            <!-- Quick presets -->
+                            <div class="flex flex-wrap gap-2 mt-3">
+                                <button onclick="setDailyReportPreset('today')"      class="text-xs px-3 py-1 rounded-full border border-gray-300 hover:bg-purple-50 hover:border-purple-300">Today</button>
+                                <button onclick="setDailyReportPreset('yesterday')"  class="text-xs px-3 py-1 rounded-full border border-gray-300 hover:bg-purple-50 hover:border-purple-300">Yesterday</button>
+                                <button onclick="setDailyReportPreset('week')"       class="text-xs px-3 py-1 rounded-full border border-gray-300 hover:bg-purple-50 hover:border-purple-300">Last 7 days</button>
+                                <button onclick="setDailyReportPreset('month')"      class="text-xs px-3 py-1 rounded-full border border-gray-300 hover:bg-purple-50 hover:border-purple-300">Last 30 days</button>
+                            </div>
+                        </div>
+
+                        <!-- Summary cards -->
+                        <div id="dailyReportSummary" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                            <div class="bg-white rounded-xl shadow-sm p-5 stat-card">
+                                <div class="text-xs text-gray-500 mb-1">Today</div>
+                                <div class="text-3xl font-bold gradient-text" id="drTodayTotal">—</div>
+                                <div class="text-xs text-gray-500 mt-1">applications</div>
+                            </div>
+                            <div class="bg-white rounded-xl shadow-sm p-5 stat-card">
+                                <div class="text-xs text-gray-500 mb-1">Range Total</div>
+                                <div class="text-3xl font-bold text-purple-600" id="drRangeTotal">—</div>
+                                <div class="text-xs text-gray-500 mt-1" id="drRangeDays">—</div>
+                            </div>
+                            <div class="bg-white rounded-xl shadow-sm p-5 stat-card">
+                                <div class="text-xs text-gray-500 mb-1">Avg / Day</div>
+                                <div class="text-3xl font-bold text-blue-600" id="drAvgPerDay">—</div>
+                                <div class="text-xs text-gray-500 mt-1">in selected range</div>
+                            </div>
+                            <div class="bg-white rounded-xl shadow-sm p-5 stat-card">
+                                <div class="text-xs text-gray-500 mb-1">Active Clients</div>
+                                <div class="text-3xl font-bold text-green-600" id="drClientsActive">—</div>
+                                <div class="text-xs text-gray-500 mt-1"><span id="drEmpsActive">—</span> employees</div>
+                            </div>
+                        </div>
+
+                        <!-- Daily totals mini-chart -->
+                        <div class="bg-white rounded-xl shadow-sm p-5 mb-6">
+                            <h3 class="font-bold text-gray-700 mb-4 flex items-center gap-2"><i class="fas fa-chart-area text-purple-500"></i> Daily Totals</h3>
+                            <div id="dailyReportChart" class="flex items-end gap-1 h-40 px-1">
+                                <div class="text-gray-400 m-auto"><i class="fas fa-spinner fa-spin"></i></div>
+                            </div>
+                        </div>
+
+                        <!-- Top clients & employees -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div class="bg-white rounded-xl shadow-sm p-5">
+                                <h3 class="font-bold text-gray-700 mb-4 flex items-center gap-2"><i class="fas fa-trophy text-yellow-500"></i> Top Clients (in range)</h3>
+                                <div id="dailyReportTopClients" class="space-y-2">
+                                    <div class="text-center text-gray-400 py-4"><i class="fas fa-spinner fa-spin"></i></div>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-xl shadow-sm p-5">
+                                <h3 class="font-bold text-gray-700 mb-4 flex items-center gap-2"><i class="fas fa-user-tie text-blue-500"></i> Top Employees (in range)</h3>
+                                <div id="dailyReportTopEmployees" class="space-y-2">
+                                    <div class="text-center text-gray-400 py-4"><i class="fas fa-spinner fa-spin"></i></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Detailed breakdown table -->
+                        <div class="bg-white rounded-xl shadow-sm p-4 md:p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-bold text-gray-700 flex items-center gap-2"><i class="fas fa-table text-purple-500"></i> Detailed Breakdown</h3>
+                                <button onclick="exportDailyReportCSV()" class="text-sm text-purple-600 hover:text-purple-800">
+                                    <i class="fas fa-download mr-1"></i>Export CSV
+                                </button>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead>
+                                        <tr class="border-b bg-gray-50">
+                                            <th class="text-left p-3">Date</th>
+                                            <th class="text-left p-3">Client</th>
+                                            <th class="text-left p-3">Employee</th>
+                                            <th class="text-right p-3">Applications</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="dailyReportTableBody">
+                                        <tr><td colspan="4" class="p-6 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>Loading...</td></tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>

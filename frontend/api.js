@@ -974,6 +974,197 @@ async function adminUpdatePayment(id, status) {
     } catch (err) { showToast(err.message, 'error'); }
 }
 
+// ════════════════════════════════════════════════════════════════
+// ADMIN — DAILY APPLICATIONS REPORT
+// "A roju enni applications, e client/employee" — date-wise tracker
+// ════════════════════════════════════════════════════════════════
+
+// In-memory cache of last fetched data (used by CSV export)
+let _lastDailyReport = null;
+
+// Initialize date inputs to default (last 7 days) only on first call
+function _ensureDailyReportDefaults() {
+    const fromEl = document.getElementById('dailyReportFrom');
+    const toEl   = document.getElementById('dailyReportTo');
+    if (!fromEl || !toEl) return;
+    if (!fromEl.value || !toEl.value) {
+        const today = new Date();
+        const past  = new Date(Date.now() - 6 * 86400000);
+        toEl.value   = today.toISOString().slice(0, 10);
+        fromEl.value = past.toISOString().slice(0, 10);
+    }
+}
+
+// Quick preset buttons (Today / Yesterday / 7d / 30d)
+function setDailyReportPreset(preset) {
+    const fromEl = document.getElementById('dailyReportFrom');
+    const toEl   = document.getElementById('dailyReportTo');
+    if (!fromEl || !toEl) return;
+    const today = new Date();
+    const ymd   = (d) => d.toISOString().slice(0, 10);
+    let from = today, to = today;
+    if (preset === 'today')         { from = today; to = today; }
+    else if (preset === 'yesterday'){ const y = new Date(Date.now() - 86400000); from = y; to = y; }
+    else if (preset === 'week')     { from = new Date(Date.now() - 6  * 86400000); to = today; }
+    else if (preset === 'month')    { from = new Date(Date.now() - 29 * 86400000); to = today; }
+    fromEl.value = ymd(from);
+    toEl.value   = ymd(to);
+    loadAdminDailyReport();
+}
+
+// Main loader — called from sidebar click + Apply/Refresh buttons
+async function loadAdminDailyReport() {
+    _ensureDailyReportDefaults();
+    const from    = document.getElementById('dailyReportFrom')?.value;
+    const to      = document.getElementById('dailyReportTo')?.value;
+    const groupBy = document.getElementById('dailyReportGroupBy')?.value || 'both';
+
+    if (from && to && from > to) {
+        showToast('"From" date must be on or before "To" date', 'error');
+        return;
+    }
+
+    // Show loaders
+    const tbody = document.getElementById('dailyReportTableBody');
+    if (tbody) tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>Loading...</td></tr>`;
+
+    try {
+        const qs = new URLSearchParams();
+        if (from)  qs.set('from', from);
+        if (to)    qs.set('to', to);
+        qs.set('group_by', groupBy);
+
+        const data = await apiCall(`/admin/daily-applications?${qs.toString()}`);
+        _lastDailyReport = data;
+
+        renderDailyReportSummary(data);
+        renderDailyReportChart(data.daily_totals || []);
+        renderDailyReportTopList('dailyReportTopClients',   data.top_clients   || [], 'client');
+        renderDailyReportTopList('dailyReportTopEmployees', data.top_employees || [], 'employee');
+        renderDailyReportTable(data.breakdown || [], groupBy);
+    } catch (err) {
+        showToast('Daily report load failed: ' + err.message, 'error');
+        if (tbody) tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-red-500">Failed to load report</td></tr>`;
+    }
+}
+
+function renderDailyReportSummary(data) {
+    const s   = data.summary || {};
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set('drTodayTotal',    s.today_total ?? 0);
+    set('drRangeTotal',    s.range_total ?? 0);
+    set('drRangeDays',     `over ${data.range?.days ?? 0} days`);
+    set('drAvgPerDay',     s.avg_per_day ?? 0);
+    set('drClientsActive', s.clients_active ?? 0);
+    set('drEmpsActive',    s.employees_active ?? 0);
+}
+
+function renderDailyReportChart(dailyTotals) {
+    const container = document.getElementById('dailyReportChart');
+    if (!container) return;
+    if (!dailyTotals.length) {
+        container.innerHTML = `<div class="text-gray-400 m-auto text-sm">No data in selected range</div>`;
+        return;
+    }
+    const max = Math.max(1, ...dailyTotals.map(d => d.apps_count));
+    container.innerHTML = dailyTotals.map(d => {
+        const pct = (d.apps_count / max) * 100;
+        const date = new Date(d.day);
+        const label = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+        return `
+            <div class="flex flex-col items-center justify-end flex-1 h-full group" title="${label}: ${d.apps_count}">
+                <div class="text-[10px] text-gray-500 mb-1 opacity-0 group-hover:opacity-100 transition">${d.apps_count}</div>
+                <div class="w-full chart-bar rounded-t" style="height: ${pct}%; min-height: 2px;"></div>
+                <div class="text-[9px] text-gray-400 mt-1 truncate w-full text-center">${label}</div>
+            </div>`;
+    }).join('');
+}
+
+function renderDailyReportTopList(elId, list, kind) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    if (!list.length) {
+        el.innerHTML = `<div class="text-center text-gray-400 py-4 text-sm">No data</div>`;
+        return;
+    }
+    const max = Math.max(1, ...list.map(x => x.apps_count));
+    el.innerHTML = list.map((x, i) => {
+        const name  = kind === 'client' ? (x.client_name  || '—') : (x.employee_name || '—');
+        const sub   = kind === 'client' ? (x.client_email || '')  : '';
+        const pct   = (x.apps_count / max) * 100;
+        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `<span class="text-gray-400 text-sm w-5 inline-block">${i + 1}.</span>`;
+        return `
+            <div class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg">
+                <div class="text-lg flex-shrink-0 w-6 text-center">${medal}</div>
+                <div class="flex-1 min-w-0">
+                    <div class="font-semibold text-sm truncate">${escHtml(name)}</div>
+                    ${sub ? `<div class="text-xs text-gray-400 truncate">${escHtml(sub)}</div>` : ''}
+                    <div class="bg-gray-100 rounded-full h-1.5 mt-1 overflow-hidden">
+                        <div class="gradient-bg h-full" style="width: ${pct}%"></div>
+                    </div>
+                </div>
+                <div class="text-lg font-bold text-purple-600 flex-shrink-0">${x.apps_count}</div>
+            </div>`;
+    }).join('');
+}
+
+function renderDailyReportTable(rows, groupBy) {
+    const tbody = document.getElementById('dailyReportTableBody');
+    if (!tbody) return;
+    if (!rows.length) {
+        tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-500">No applications in this range</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = rows.map(r => {
+        const date   = r.day ? new Date(r.day).toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' }) : '—';
+        const client = (groupBy === 'client'   || groupBy === 'both')
+            ? `<div class="font-semibold">${escHtml(r.client_name || '—')}</div>${r.client_email ? `<div class="text-xs text-gray-400">${escHtml(r.client_email)}</div>` : ''}`
+            : `<span class="text-gray-300">—</span>`;
+        const emp    = (groupBy === 'employee' || groupBy === 'both')
+            ? escHtml(r.employee_name || '<span class="text-gray-400">Unassigned</span>')
+            : `<span class="text-gray-300">—</span>`;
+        return `
+            <tr class="border-b hover:bg-gray-50">
+                <td class="p-3 whitespace-nowrap">${date}</td>
+                <td class="p-3">${client}</td>
+                <td class="p-3">${emp}</td>
+                <td class="p-3 text-right"><span class="font-bold text-purple-600 text-base">${r.apps_count}</span></td>
+            </tr>`;
+    }).join('');
+}
+
+// CSV export of the breakdown table
+function exportDailyReportCSV() {
+    if (!_lastDailyReport || !_lastDailyReport.breakdown?.length) {
+        showToast('Nothing to export — load a report first', 'info');
+        return;
+    }
+    const rows = _lastDailyReport.breakdown;
+    const groupBy = _lastDailyReport.group_by || 'both';
+    const headers = ['Date', 'Client Name', 'Client Email', 'Employee', 'Applications'];
+    const csvEsc  = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const lines   = [headers.map(csvEsc).join(',')];
+    for (const r of rows) {
+        lines.push([
+            r.day || '',
+            (groupBy === 'client'   || groupBy === 'both') ? (r.client_name  || '') : '',
+            (groupBy === 'client'   || groupBy === 'both') ? (r.client_email || '') : '',
+            (groupBy === 'employee' || groupBy === 'both') ? (r.employee_name || '') : '',
+            r.apps_count ?? 0,
+        ].map(csvEsc).join(','));
+    }
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `daily-applications_${_lastDailyReport.range?.from}_to_${_lastDailyReport.range?.to}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('CSV exported ✅', 'success');
+}
+
 // ── DOCUMENT VIEWER ───────────────────────────────────────────
 // BUG FIX: Direct S3 URLs are private — opening them shows raw XML/bytes ("code").
 // Route all document opens through the backend presign endpoint instead.

@@ -192,6 +192,9 @@ CREATE INDEX idx_applications_client   ON job_applications(client_id);
 CREATE INDEX idx_applications_employee ON job_applications(employee_id);
 CREATE INDEX idx_applications_status   ON job_applications(status);
 CREATE INDEX idx_applications_date     ON job_applications(applied_at);
+-- For Daily Applications Report (admin dashboard) — fast date-range groupings
+CREATE INDEX idx_applications_date_client   ON job_applications(applied_at DESC, client_id);
+CREATE INDEX idx_applications_date_employee ON job_applications(applied_at DESC, employee_id);
 
 -- ============================================================
 -- INTERVIEW TRACKER

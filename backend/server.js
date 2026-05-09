@@ -62,6 +62,8 @@ db.connect()
 // ──────────────────────────────────────────────────────────────
 async function sendEmail({ to, subject, html, text }) {
     try {
+        // BUG FIX (502): hard-cap email send at 8s so a misconfigured/slow SES
+        // never hangs the calling handler past Render's proxy timeout.
         const { SESClient, SendEmailCommand } = require('@aws-sdk/client-ses');
         const ses = new SESClient({
             region: process.env.AWS_REGION || 'ap-south-1',
@@ -69,9 +71,11 @@ async function sendEmail({ to, subject, html, text }) {
                 accessKeyId: process.env.AWS_ACCESS_KEY_ID,
                 secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
             },
+            requestHandler: { requestTimeout: 8000, connectionTimeout: 5000 },
+            maxAttempts: 1,
         });
 
-        await ses.send(new SendEmailCommand({
+        const sendPromise = ses.send(new SendEmailCommand({
             Source: process.env.EMAIL_FROM || 'noreply@hope-irl.com',
             Destination: { ToAddresses: [to] },
             Message: {
@@ -82,6 +86,11 @@ async function sendEmail({ to, subject, html, text }) {
                 },
             },
         }));
+
+        await Promise.race([
+            sendPromise,
+            new Promise((_, rej) => setTimeout(() => rej(new Error('SES send timed out')), 8000)),
+        ]);
 
         console.log(`📧 Email sent to ${to}`);
     } catch (err) {
@@ -313,7 +322,7 @@ app.use(helmet({
 
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').filter(Boolean);
 
-app.use(cors({
+const corsOptions = {
     origin: (origin, cb) => {
         if (!origin) return cb(null, true);
 
@@ -326,7 +335,21 @@ app.use(cors({
         cb(new Error(`CORS: ${origin} not allowed`));
     },
     credentials: true,
-}));
+    // BUG FIX (502 on POST/PATCH/DELETE): OPTIONS preflight was failing at the
+    // edge because cors() defaults didn't whitelist all the headers the frontend
+    // sends (Authorization, Content-Type) and rate-limit middleware below was
+    // counting OPTIONS toward the limit. Explicit methods/headers + dedicated
+    // preflight handler fix this.
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    exposedHeaders: ['Content-Disposition'],
+    maxAge: 86400, // cache preflight 24h — fewer OPTIONS round-trips
+    optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
+// Explicit preflight responder — must come BEFORE any rate-limit / auth middleware
+app.options('*', cors(corsOptions));
 
 // Stripe webhook needs raw body — BEFORE express.json()
 app.post('/api/payments/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
@@ -378,7 +401,9 @@ const globalLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     message: { error: 'Too many requests.' },
-    skip: (req) => req.path === '/api/realtime/events',
+    // BUG FIX (502 on POST): never throttle CORS preflight or SSE — both are
+    // browser plumbing that should always go through.
+    skip: (req) => req.method === 'OPTIONS' || req.path === '/api/realtime/events',
 });
 
 const authLimiter = rateLimit({
@@ -1314,6 +1339,136 @@ app.get('/api/admin/stats', requireAuth(['admin']), async (req, res) => {
 });
 
 // ──────────────────────────────────────────────────────────────
+// 13b. ADMIN — DAILY APPLICATIONS REPORT
+// "On each day, how many applications were applied for which client (by which employee)"
+// Query params:
+//   - from   : YYYY-MM-DD (default: today - 6 days)
+//   - to     : YYYY-MM-DD (default: today)
+//   - group_by: 'client' | 'employee' | 'both'  (default: 'both')
+// ──────────────────────────────────────────────────────────────
+app.get('/api/admin/daily-applications', requireAuth(['admin']), async (req, res) => {
+    try {
+        // Validate inputs with zod (consistent with rest of codebase)
+        const Q = z.object({
+            from:     z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+            to:       z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+            group_by: z.enum(['client', 'employee', 'both']).optional(),
+        });
+        const parsed = Q.safeParse(req.query);
+        if (!parsed.success) return res.status(400).json({ error: 'Invalid query params' });
+
+        // Default range: last 7 days (today inclusive)
+        const today  = new Date().toISOString().slice(0, 10);
+        const def    = new Date(Date.now() - 6 * 86400000).toISOString().slice(0, 10);
+        const from   = parsed.data.from || def;
+        const to     = parsed.data.to   || today;
+        const group  = parsed.data.group_by || 'both';
+
+        // Sanity: from <= to, range <= 92 days (prevent huge scans)
+        if (from > to)                                    return res.status(400).json({ error: '"from" must be <= "to"' });
+        const days = Math.round((new Date(to) - new Date(from)) / 86400000);
+        if (days > 92)                                    return res.status(400).json({ error: 'Date range too large (max 92 days)' });
+
+        // Build the GROUP BY columns dynamically based on `group_by`
+        // We always group by date; client/employee added based on selection.
+        let selectExtra = '';
+        let groupExtra  = '';
+        if (group === 'client' || group === 'both') {
+            selectExtra += `, cu.id AS client_id, cu.full_name AS client_name, cu.email AS client_email`;
+            groupExtra  += `, cu.id, cu.full_name, cu.email`;
+        }
+        if (group === 'employee' || group === 'both') {
+            selectExtra += `, eu.id AS employee_id, eu.full_name AS employee_name`;
+            groupExtra  += `, eu.id, eu.full_name`;
+        }
+
+        // Main breakdown query
+        const breakdownSQL = `
+            SELECT
+                ja.applied_at AS day,
+                COUNT(*)::int AS apps_count
+                ${selectExtra}
+            FROM job_applications ja
+            JOIN client_profiles cp ON cp.id = ja.client_id
+            JOIN users cu           ON cu.id = cp.user_id
+            LEFT JOIN employee_profiles ep ON ep.id = ja.employee_id
+            LEFT JOIN users eu             ON eu.id = ep.user_id
+            WHERE ja.applied_at BETWEEN $1::date AND $2::date
+            GROUP BY ja.applied_at ${groupExtra}
+            ORDER BY ja.applied_at DESC, apps_count DESC
+            LIMIT 2000
+        `;
+
+        // Summary stats — totals + top performers (always computed for the range)
+        const [breakdown, summary, topClients, topEmployees, dailyTotals] = await Promise.all([
+            db.query(breakdownSQL, [from, to]),
+
+            // Totals: today, in range, distinct clients/employees in range
+            db.query(`
+                SELECT
+                    COUNT(*) FILTER (WHERE applied_at = CURRENT_DATE)::int                  AS today_total,
+                    COUNT(*)::int                                                            AS range_total,
+                    COUNT(DISTINCT client_id)::int                                           AS clients_active,
+                    COUNT(DISTINCT employee_id) FILTER (WHERE employee_id IS NOT NULL)::int  AS employees_active,
+                    ROUND(COUNT(*)::numeric / NULLIF($3, 0), 1)::float                       AS avg_per_day
+                FROM job_applications
+                WHERE applied_at BETWEEN $1::date AND $2::date
+            `, [from, to, days + 1]),
+
+            // Top 5 clients by application count in range
+            db.query(`
+                SELECT cu.full_name AS client_name, cu.email AS client_email, COUNT(*)::int AS apps_count
+                FROM job_applications ja
+                JOIN client_profiles cp ON cp.id = ja.client_id
+                JOIN users cu           ON cu.id = cp.user_id
+                WHERE ja.applied_at BETWEEN $1::date AND $2::date
+                GROUP BY cu.id, cu.full_name, cu.email
+                ORDER BY apps_count DESC
+                LIMIT 5
+            `, [from, to]),
+
+            // Top 5 employees by application count in range
+            db.query(`
+                SELECT eu.full_name AS employee_name, COUNT(*)::int AS apps_count
+                FROM job_applications ja
+                JOIN employee_profiles ep ON ep.id = ja.employee_id
+                JOIN users eu             ON eu.id = ep.user_id
+                WHERE ja.applied_at BETWEEN $1::date AND $2::date
+                GROUP BY eu.id, eu.full_name
+                ORDER BY apps_count DESC
+                LIMIT 5
+            `, [from, to]),
+
+            // Per-day totals (for tiny chart) — every date in range, zeroes filled
+            db.query(`
+                WITH series AS (
+                    SELECT generate_series($1::date, $2::date, '1 day')::date AS day
+                )
+                SELECT s.day,
+                       COALESCE(COUNT(ja.id), 0)::int AS apps_count
+                FROM series s
+                LEFT JOIN job_applications ja ON ja.applied_at = s.day
+                GROUP BY s.day
+                ORDER BY s.day ASC
+            `, [from, to]),
+        ]);
+
+        return res.json({
+            range:        { from, to, days: days + 1 },
+            group_by:     group,
+            summary:      summary.rows[0],
+            daily_totals: dailyTotals.rows,
+            top_clients:  topClients.rows,
+            top_employees: topEmployees.rows,
+            breakdown:    breakdown.rows,
+        });
+    } catch (err) {
+        console.error('[admin/daily-applications]', err);
+        return res.status(500).json({ error: 'Failed to load daily applications report' });
+    }
+});
+
+// ──────────────────────────────────────────────────────────────
 // 14. ADMIN — CLIENTS CRUD
 // ──────────────────────────────────────────────────────────────
 app.get('/api/admin/clients', requireAuth(['admin']), async (req, res) => {
@@ -1525,23 +1680,31 @@ app.post('/api/admin/assign', requireAuth(['admin']), async (req, res) => {
         [client_profile_id, employee_profile_id]
     );
 
-    try {
-        const ci = await db.query(
-            'SELECT u.email, u.full_name FROM users u JOIN client_profiles cp ON cp.user_id=u.id WHERE cp.id=$1',
-            [client_profile_id]
-        );
-        const ei = await db.query(
-            'SELECT u.full_name FROM users u JOIN employee_profiles ep ON ep.user_id=u.id WHERE ep.id=$1',
-            [employee_profile_id]
-        );
-
-        if (ci.rows.length && ei.rows.length) {
-            await sendAssignmentEmail(ci.rows[0].email, ci.rows[0].full_name, ei.rows[0].full_name);
+    // BUG FIX (502): SES email send was awaited in the request path. If SES
+    // creds are missing/wrong, the SDK hangs ~30s and Render's edge proxy
+    // returns 502 Bad Gateway before the handler can respond. Fire-and-forget
+    // it so the user gets a fast 201 regardless of email status.
+    setImmediate(async () => {
+        try {
+            const ci = await db.query(
+                'SELECT u.email, u.full_name FROM users u JOIN client_profiles cp ON cp.user_id=u.id WHERE cp.id=$1',
+                [client_profile_id]
+            );
+            const ei = await db.query(
+                'SELECT u.full_name FROM users u JOIN employee_profiles ep ON ep.user_id=u.id WHERE ep.id=$1',
+                [employee_profile_id]
+            );
+            if (ci.rows.length && ei.rows.length) {
+                await sendAssignmentEmail(ci.rows[0].email, ci.rows[0].full_name, ei.rows[0].full_name);
+            }
+        } catch (err) {
+            console.warn('⚠️ Assignment email background task failed:', err.message);
         }
-    } catch {}
+    });
 
-    await audit(req.user.sub, 'assign_client', { recordId: rows[0].id });
-    broadcastSSE('assignment_updated', { client_id: client_profile_id, employee_id: employee_profile_id });
+    // Audit + SSE are fast/safe but also not critical for the response — keep async but don't await SSE
+    audit(req.user.sub, 'assign_client', { recordId: rows[0].id }).catch(() => {});
+    try { broadcastSSE('assignment_updated', { client_id: client_profile_id, employee_id: employee_profile_id }); } catch {}
 
     return res.status(201).json(rows[0]);
 });
