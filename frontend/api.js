@@ -607,6 +607,11 @@ async function loadAdminClients() {
                         class="text-purple-600 hover:text-purple-800 p-1" title="Assign Employee">
                         <i class="fas fa-user-plus"></i>
                     </button>
+                    ${c.assigned_employee ? `
+                    <button onclick="unassignClient('${c.profile_id}','${escAttr(c.full_name)}','${escAttr(c.assigned_employee)}')"
+                        class="text-yellow-600 hover:text-yellow-800 p-1" title="Unassign from ${escAttr(c.assigned_employee)}">
+                        <i class="fas fa-user-minus"></i>
+                    </button>` : ''}
                     <button onclick="showAdminResetPassword('${c.id}','${escAttr(c.full_name)}')"
                         class="text-orange-500 hover:text-orange-700 p-1" title="Reset Password">
                         <i class="fas fa-key"></i>
@@ -1198,6 +1203,18 @@ function assignClient(profileId) {
         const sel = document.getElementById('assignClientSelect');
         if (sel) sel.value = profileId;
     });
+}
+
+async function unassignClient(profileId, clientName, employeeName) {
+    if (!confirm(`Unassign ${clientName} from ${employeeName}?\n\nThe client will become unassigned and the employee will lose access.`)) return;
+    try {
+        await apiCall(`/admin/assign/${profileId}`, { method: 'DELETE' });
+        showToast(`✅ ${clientName} unassigned from ${employeeName}`, 'success');
+        loadAdminClients();
+        loadAdminEmployees();
+    } catch (err) {
+        showToast('Unassign failed: ' + err.message, 'error');
+    }
 }
 
 async function confirmAssignment() {
@@ -1991,6 +2008,21 @@ function connectSSE() {
         if (_currentUser?.role === 'client')   loadClientDashboard();
         if (_currentUser?.role === 'employee') loadEmployeeDashboard();
         if (_currentUser?.role === 'admin')    loadAdminStats();
+    });
+
+    // Real-time application count updates for admin clients table & employee clients grid
+    _sseSource.addEventListener('application_changed', () => {
+        if (_currentUser?.role === 'admin') {
+            // Refresh the All Clients table so the Applications column updates live
+            if (!document.getElementById('adminClientsSection')?.classList.contains('hidden')) {
+                loadAdminClients();
+            }
+            loadAdminStats();
+        }
+        if (_currentUser?.role === 'employee') {
+            // Refresh employee's client cards so today/total counts update live
+            loadEmployeeClients();
+        }
     });
 
     _sseSource.addEventListener('assignment_updated', (e) => {
