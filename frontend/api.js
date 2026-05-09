@@ -66,9 +66,31 @@ let _refreshToken = null;
 let _currentUser  = null;
 let _pendingEmail = null;
 
-function setTokens(at, rt) { _accessToken = at; _refreshToken = rt; }
-function clearTokens()     { _accessToken = null; _refreshToken = null; _currentUser = null; }
+// Persist refresh token across page refreshes so users stay logged in.
+// Only refresh token is stored — access token stays in memory and is re-fetched.
+const _RT_KEY = 'hope_irl_rt';
+
+function setTokens(at, rt) {
+    _accessToken = at;
+    _refreshToken = rt;
+    try { if (rt) localStorage.setItem(_RT_KEY, rt); } catch {}
+}
+function clearTokens() {
+    _accessToken = null;
+    _refreshToken = null;
+    _currentUser = null;
+    try { localStorage.removeItem(_RT_KEY); } catch {}
+}
 function getCurrentUser()  { return _currentUser; }
+
+// Prevent landing-page flash on refresh: if a refresh token exists, hide
+// landing immediately. restoreSession() will reveal the correct dashboard,
+// or re-show landing if the token turns out to be invalid.
+try {
+    if (localStorage.getItem(_RT_KEY)) {
+        document.getElementById('landingPage')?.classList.add('hidden');
+    }
+} catch {}
 
 // ── Core API Fetch ────────────────────────────────────────────
 async function apiCall(path, options = {}) {
@@ -272,6 +294,60 @@ async function logout() {
     clearTokens();
     showPage('landingPage');
     showToast('Logged out successfully.', 'info');
+}
+
+// ── SESSION RESTORE ──────────────────────────────────────────
+// Called by script.js on DOMContentLoaded. Reads the persisted refresh
+// token from localStorage and rebuilds the in-memory session so the user
+// lands directly on their dashboard instead of the landing page.
+//
+// Returns: true if session restored & dashboard shown; false otherwise.
+async function restoreSession() {
+    let savedRT = null;
+    try { savedRT = localStorage.getItem(_RT_KEY); } catch {}
+    if (!savedRT) return false;
+
+    _refreshToken = savedRT;
+
+    // Exchange the refresh token for a fresh access token (rotated server-side)
+    const refreshed = await attemptRefresh();
+    if (!refreshed) {
+        clearTokens();
+        document.getElementById('landingPage')?.classList.remove('hidden');
+        return false;
+    }
+
+    // Hydrate current user from /api/me
+    let me;
+    try {
+        me = await apiCall('/me');
+    } catch {
+        clearTokens();
+        document.getElementById('landingPage')?.classList.remove('hidden');
+        return false;
+    }
+
+    // Normalize to the same shape that handleLogin produces (name vs full_name etc.)
+    _currentUser = {
+        id: me.id,
+        name: me.full_name,
+        email: me.email,
+        role: me.role,
+        isVerified: me.is_verified,
+    };
+
+    // Route to the correct dashboard
+    const pages = { admin: 'adminDashboard', employee: 'employeeDashboard', client: 'clientDashboard' };
+    showPage(pages[_currentUser.role] || 'clientDashboard');
+    updateUserDisplay(_currentUser);
+
+    if (_currentUser.role === 'admin')    loadAdminDashboard();
+    if (_currentUser.role === 'employee') loadEmployeeDashboard();
+    if (_currentUser.role === 'client')   loadClientDashboard();
+    loadNotifications();
+    setTimeout(connectSSE, 300);
+
+    return true;
 }
 
 // ── FORGOT PASSWORD ───────────────────────────────────────────
