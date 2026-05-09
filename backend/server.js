@@ -58,6 +58,24 @@ db.connect()
     .catch(e => { console.error('❌ DB failed:', e.message); process.exit(1); });
 
 // ──────────────────────────────────────────────────────────────
+// SAFETY NET — never let stray async rejections kill the process.
+// Express 4 does not auto-forward async-handler errors to the error
+// middleware. On Node 20+ the default for unhandledRejection is to
+// crash. The "Failed to fetch" the frontend was seeing was actually
+// the server *crashing* mid-request (most often /admin/assign
+// throwing a UNIQUE constraint violation that no try/catch caught),
+// the HTTP socket dropping, and nodemon restarting in the background.
+// Logging here lets us see the real cause in `console` instead of
+// silently dying.
+// ──────────────────────────────────────────────────────────────
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('🚨 UNHANDLED REJECTION at:', promise, '\nreason:', reason);
+});
+process.on('uncaughtException', (err) => {
+    console.error('🚨 UNCAUGHT EXCEPTION:', err);
+});
+
+// ──────────────────────────────────────────────────────────────
 // 2. AWS SES EMAIL + WHATSAPP
 // ──────────────────────────────────────────────────────────────
 async function sendEmail({ to, subject, html, text }) {
@@ -1658,75 +1676,140 @@ app.post('/api/admin/assign', requireAuth(['admin']), async (req, res) => {
         return res.status(400).json({ error: 'Both IDs required' });
     }
 
-    const epCheck = await db.query(
-        `SELECT ep.max_clients, COUNT(ca.id) AS assigned
-         FROM employee_profiles ep
-         LEFT JOIN client_assignments ca ON ca.employee_id=ep.id AND ca.is_active=TRUE
-         WHERE ep.id=$1
-         GROUP BY ep.max_clients`,
-        [employee_profile_id]
-    );
+    // BUG FIX ("Failed to fetch" on assign):
+    //   Express 4 does NOT auto-catch async errors. If ANY db.query throws here
+    //   (UUID format error, FK violation, UNIQUE constraint violation), the
+    //   promise rejects → Node treats it as an unhandledRejection → on Node 20+
+    //   the default behaviour is to crash the process. The HTTP connection
+    //   drops mid-request, the browser gets "Failed to fetch", and the user
+    //   sees no real error message. The whole handler is now wrapped in
+    //   try/catch and runs inside a transaction so partial state can't leak.
+    //
+    // BUG FIX (UNIQUE constraint violation on re-assign):
+    //   Schema has UNIQUE(client_id, employee_id, is_active). The OLD ordering
+    //   ran `UPDATE ... is_active=FALSE` BEFORE deleting stale inactive rows.
+    //   If a historical (X, Y, FALSE) row already existed from a prior
+    //   reassignment cycle, the UPDATE tried to create a duplicate
+    //   (X, Y, FALSE) and threw. We now delete ALL inactive rows for this
+    //   client first — history lives in audit_logs, not in this table.
 
-    if (epCheck.rows.length && parseInt(epCheck.rows[0].assigned, 10) >= epCheck.rows[0].max_clients) {
-        return res.status(400).json({ error: 'Employee has reached their maximum client capacity' });
-    }
+    const client = await db.connect();
+    try {
+        await client.query('BEGIN');
 
-    await db.query(
-        'UPDATE client_assignments SET is_active=FALSE, unassigned_at=NOW() WHERE client_id=$1 AND is_active=TRUE',
-        [client_profile_id]
-    );
+        // 1. Capacity check (skip if employee not found — INSERT will FK-fail with a clean error)
+        const epCheck = await client.query(
+            `SELECT ep.max_clients,
+                    (SELECT COUNT(*) FROM client_assignments ca
+                     WHERE ca.employee_id=ep.id AND ca.is_active=TRUE
+                       AND ca.client_id <> $2) AS assigned
+             FROM employee_profiles ep
+             WHERE ep.id=$1`,
+            [employee_profile_id, client_profile_id]
+        );
 
-    // BUG FIX: UNIQUE(client_id, employee_id, is_active) constraint violation on re-assignment.
-    // If client was previously assigned to the same employee, an is_active=FALSE row already exists.
-    // Inserting a new row would try to create a second (client, employee, FALSE) after deactivation,
-    // crashing with a unique constraint error. Delete the stale inactive row first.
-    await db.query(
-        'DELETE FROM client_assignments WHERE client_id=$1 AND employee_id=$2 AND is_active=FALSE',
-        [client_profile_id, employee_profile_id]
-    );
-
-    const { rows } = await db.query(
-        'INSERT INTO client_assignments (client_id, employee_id) VALUES ($1,$2) RETURNING *',
-        [client_profile_id, employee_profile_id]
-    );
-
-    // BUG FIX (502): SES email send was awaited in the request path. If SES
-    // creds are missing/wrong, the SDK hangs ~30s and Render's edge proxy
-    // returns 502 Bad Gateway before the handler can respond. Fire-and-forget
-    // it so the user gets a fast 201 regardless of email status.
-    setImmediate(async () => {
-        try {
-            const ci = await db.query(
-                'SELECT u.email, u.full_name FROM users u JOIN client_profiles cp ON cp.user_id=u.id WHERE cp.id=$1',
-                [client_profile_id]
-            );
-            const ei = await db.query(
-                'SELECT u.full_name FROM users u JOIN employee_profiles ep ON ep.user_id=u.id WHERE ep.id=$1',
-                [employee_profile_id]
-            );
-            if (ci.rows.length && ei.rows.length) {
-                await sendAssignmentEmail(ci.rows[0].email, ci.rows[0].full_name, ei.rows[0].full_name);
-            }
-        } catch (err) {
-            console.warn('⚠️ Assignment email background task failed:', err.message);
+        if (!epCheck.rows.length) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'Employee not found' });
         }
-    });
 
-    // Audit + SSE are fast/safe but also not critical for the response — keep async but don't await SSE
-    audit(req.user.sub, 'assign_client', { recordId: rows[0].id }).catch(() => {});
-    try { broadcastSSE('assignment_updated', { client_id: client_profile_id, employee_id: employee_profile_id }); } catch {}
+        // Capacity excludes the current client (re-assigning the same client to
+        // the same employee should not count as net-new).
+        if (parseInt(epCheck.rows[0].assigned, 10) >= epCheck.rows[0].max_clients) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ error: 'Employee has reached their maximum client capacity' });
+        }
 
-    return res.status(201).json(rows[0]);
+        // 2. Delete ALL inactive history rows for this client. UNIQUE constraint
+        //    is the reason — see comment above. History is preserved in audit_logs.
+        await client.query(
+            'DELETE FROM client_assignments WHERE client_id=$1 AND is_active=FALSE',
+            [client_profile_id]
+        );
+
+        // 3. Deactivate any currently-active assignment for this client.
+        await client.query(
+            'UPDATE client_assignments SET is_active=FALSE, unassigned_at=NOW() WHERE client_id=$1 AND is_active=TRUE',
+            [client_profile_id]
+        );
+
+        // 4. Step 3 may have just created a (client, oldEmployee, FALSE) row.
+        //    If oldEmployee == newEmployee (re-assigning to same), that row
+        //    would conflict with our INSERT below. Delete it.
+        await client.query(
+            'DELETE FROM client_assignments WHERE client_id=$1 AND employee_id=$2 AND is_active=FALSE',
+            [client_profile_id, employee_profile_id]
+        );
+
+        // 5. Insert new active assignment.
+        const { rows } = await client.query(
+            'INSERT INTO client_assignments (client_id, employee_id) VALUES ($1,$2) RETURNING *',
+            [client_profile_id, employee_profile_id]
+        );
+
+        await client.query('COMMIT');
+
+        // 6. Side-effects AFTER commit (so failures here don't roll back the assignment).
+        //    Email is fire-and-forget — see prior 502 BUG FIX.
+        setImmediate(async () => {
+            try {
+                const ci = await db.query(
+                    'SELECT u.email, u.full_name FROM users u JOIN client_profiles cp ON cp.user_id=u.id WHERE cp.id=$1',
+                    [client_profile_id]
+                );
+                const ei = await db.query(
+                    'SELECT u.full_name FROM users u JOIN employee_profiles ep ON ep.user_id=u.id WHERE ep.id=$1',
+                    [employee_profile_id]
+                );
+                if (ci.rows.length && ei.rows.length) {
+                    await sendAssignmentEmail(ci.rows[0].email, ci.rows[0].full_name, ei.rows[0].full_name);
+                }
+            } catch (err) {
+                console.warn('⚠️ Assignment email background task failed:', err.message);
+            }
+        });
+
+        audit(req.user.sub, 'assign_client', { recordId: rows[0].id }).catch(() => {});
+        try { broadcastSSE('assignment_updated', { client_id: client_profile_id, employee_id: employee_profile_id }); } catch {}
+
+        return res.status(201).json(rows[0]);
+    } catch (err) {
+        try { await client.query('ROLLBACK'); } catch {}
+        console.error('❌ /admin/assign failed:', err.message, '| code:', err.code);
+
+        // Map common Postgres errors to clean HTTP responses so the frontend
+        // shows something actionable instead of "Failed to fetch".
+        if (err.code === '23505') {
+            return res.status(409).json({ error: 'Duplicate assignment exists. Try again or refresh.' });
+        }
+        if (err.code === '23503') {
+            return res.status(400).json({ error: 'Invalid client or employee ID (no matching record).' });
+        }
+        if (err.code === '22P02') {
+            return res.status(400).json({ error: 'Invalid UUID format for client or employee ID.' });
+        }
+        return res.status(500).json({ error: 'Assignment failed: ' + err.message });
+    } finally {
+        client.release();
+    }
 });
 
 app.delete('/api/admin/assign/:client_profile_id', requireAuth(['admin']), async (req, res) => {
-    await db.query(
-        'UPDATE client_assignments SET is_active=FALSE, unassigned_at=NOW() WHERE client_id=$1 AND is_active=TRUE',
-        [req.params.client_profile_id]
-    );
+    try {
+        await db.query(
+            'UPDATE client_assignments SET is_active=FALSE, unassigned_at=NOW() WHERE client_id=$1 AND is_active=TRUE',
+            [req.params.client_profile_id]
+        );
 
-    broadcastSSE('assignment_updated', { client_id: req.params.client_profile_id, unassigned: true });
-    return res.status(204).send();
+        broadcastSSE('assignment_updated', { client_id: req.params.client_profile_id, unassigned: true });
+        return res.status(204).send();
+    } catch (err) {
+        console.error('❌ /admin/assign DELETE failed:', err.message);
+        if (err.code === '22P02') {
+            return res.status(400).json({ error: 'Invalid client profile ID format.' });
+        }
+        return res.status(500).json({ error: 'Unassign failed: ' + err.message });
+    }
 });
 
 // ──────────────────────────────────────────────────────────────
