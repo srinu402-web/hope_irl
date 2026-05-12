@@ -1057,7 +1057,7 @@ async function adminUpdatePayment(id, status) {
 
 // ════════════════════════════════════════════════════════════════
 // ADMIN — DAILY APPLICATIONS REPORT
-// "A roju enni applications, e client/employee" — date-wise tracker
+// "Applications per day, by client/employee" — date-wise tracker
 // ════════════════════════════════════════════════════════════════
 
 // In-memory cache of last fetched data (used by CSV export)
@@ -2523,34 +2523,7 @@ function setupPaymentSSEHandlers(){
 // Enhanced admin dashboard with analytics
 async function loadAdminAnalytics(stats){
     if(!stats) return;
-    // Monthly revenue chart
-    const chartEl=document.getElementById('adminRevenueChart');
-    if(chartEl&&stats.monthlyRevenue?.length){
-        const labels=stats.monthlyRevenue.map(r=>r.month);
-        const data=stats.monthlyRevenue.map(r=>parseFloat(r.revenue));
-        chartEl.innerHTML='';
-        const maxVal=Math.max(...data,1);
-        chartEl.innerHTML=`<div class="flex items-end gap-3 h-32 px-2">${data.map((v,i)=>`
-            <div class="flex-1 flex flex-col items-center gap-1">
-                <span class="text-xs text-gray-500 font-semibold">€${v>999?(v/1000).toFixed(1)+'k':v.toFixed(0)}</span>
-                <div class="w-full rounded-t-lg gradient-bg transition-all" style="height:${Math.max(4,Math.round((v/maxVal)*100))}px;opacity:${0.5+0.5*(v/maxVal)}"></div>
-                <span class="text-xs text-gray-400">${labels[i]}</span>
-            </div>`).join('')}</div>`;
-    }
-    // Conversion rate
-    const convEl=document.getElementById('adminConversionRate');
-    if(convEl&&stats.conversionData){
-        const total=parseInt(stats.conversionData.total_clients)||1;
-        const subscribed=parseInt(stats.conversionData.subscribed_clients)||0;
-        const rate=Math.round((subscribed/total)*100);
-        convEl.innerHTML=`
-            <div class="text-3xl font-extrabold gradient-text">${rate}%</div>
-            <div class="text-xs text-gray-500 mt-1">Conversion Rate</div>
-            <div class="text-xs text-gray-400">${subscribed}/${total} clients subscribed</div>
-            <div class="w-full bg-gray-100 rounded-full h-2 mt-2">
-                <div class="gradient-bg rounded-full h-2" style="width:${rate}%"></div>
-            </div>`;
-    }
+
     // Expiring subscriptions alert
     if(stats.expiringThisWeek?.length){
         const alertEl=document.getElementById('adminExpiryAlert');
@@ -2569,8 +2542,10 @@ async function loadAdminAnalytics(stats){
         if(badge){badge.textContent=stats.pendingPaymentsCount;badge.style.display='inline-flex';}
     }
 
-    // Application Analytics chart
-    const appChartContainer = document.querySelector('#adminOverviewSection .flex.items-end.space-x-4.h-64');
+    // Application Analytics chart — real-time, refreshed via 30s polling in loadAdminDashboard
+    // BUG FIX: previous selector '#adminOverviewSection .flex.items-end.space-x-4.h-64' never matched
+    // because the actual section id is 'adminDashboardSection'. Now using dedicated id from the HTML.
+    const appChartContainer = document.getElementById('adminAppAnalyticsChart');
     if(appChartContainer && stats.monthlyApplications?.length){
         const appData = stats.monthlyApplications;
         const maxCount = Math.max(...appData.map(d=>parseInt(d.count)), 1);
@@ -2582,7 +2557,7 @@ async function loadAdminAnalytics(stats){
                      style="height:${Math.max(4, Math.round((parseInt(d.count)/maxCount)*220))}px"></div>
                 <div class="text-sm mt-2 text-gray-600">${d.month}</div>
             </div>`).join('');
-    } else if(appChartContainer && !stats.monthlyApplications?.length){
+    } else if(appChartContainer){
         appChartContainer.innerHTML = `<div class="w-full flex items-center justify-center text-gray-400 text-sm">
             <i class="fas fa-chart-bar mr-2 text-2xl text-purple-200"></i> No application data yet</div>`;
     }
