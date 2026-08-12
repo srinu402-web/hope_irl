@@ -57,7 +57,8 @@ const API_BASE = (() => {
         return 'http://' + h + ':3001/api';
     }
     // 4. Production: same origin (nginx proxies /api → backend)
-    return location.protocol + '//' + h + '/api';
+    // 4. Production: Railway backend
+return 'https://hopeirl-production.up.railway.app/api';
 })();
 
 // ── Token Storage ─────────────────────────────────────────────
